@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { ScenicApp, KnowYourClient } from "./pages";
-import { isMe } from "./api";
+import { ScenicApp, KnowYourClient } from "@/pages";
+import { isMe } from "@/api";
+import { Background } from "./components";
 
 export default function ProtectedApp() {
   const [loading, setLoading] = useState(true);
@@ -21,26 +22,13 @@ export default function ProtectedApp() {
     checkAuth();
   }, []);
 
-   
-
   if (loading) {
-    return (
-      <div className="flex h-svh items-center justify-center text-body">
-        Checking authentication…
-      </div>
-    );
+    return <Background>Checking authentication…</Background>;
   }
 
   return (
-    <div
-      className={`relative min-h-svh bg-cover bg-center ${
-        authenticated ? "bg-auth" : "bg-unauth"
-      }`}
-    >
-      <div className="absolute inset-0 bg-black/30" />
-      <div className="relative z-10">
-        {authenticated ? <ScenicApp /> : <KnowYourClient />}
-      </div>
-    </div>
+    <Background>
+      {authenticated ? <ScenicApp /> : <KnowYourClient />}
+    </Background>
   );
 }

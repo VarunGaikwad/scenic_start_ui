@@ -6,7 +6,9 @@
    ========================= */
 @layer base {
   body {
-    @apply bg-background text-text-primary;
+    background-image: url("/wallpapers/welcome.gif");
+    background-size: cover;
+    background-position: center;
     font-family: "Josefin Sans", sans-serif;
   }
 }
@@ -15,109 +17,15 @@
    COMPONENTS
    ========================= */
 @layer components {
-  .kyc__main {
-    @apply min-h-svh flex justify-center
-           items-center lg:items-end
-           px-4 py-10 sm:px-6 sm:py-16 lg:p-28;
-  }
-
-  .container {
-    @apply max-w-lg w-full mx-auto flex flex-col text-center
-           gap-6 sm:gap-8 lg:gap-10;
-  }
-
-  .heading {
-    @apply font-bold;
-    font-size: var(--text-heading);
-    color: var(--color-text-primary);
-  }
-
-  .kyc__input {
-    @apply w-full text-center outline-none border-b-2 py-2;
-    border-color: var(--color-input-border);
-    font-size: var(--text-body);
-  }
-
-  .search-bar {
-    @apply relative flex items-center gap-3 px-4 py-2 rounded-full
-         border shadow-sm transition
-         focus-within:ring-2
-         w-full max-w-md;
-  }
-
-  .search-input {
-    @apply flex-1 bg-transparent outline-none;
-    color: var(--color-text-primary);
-  }
-
-  .search-divider {
-    @apply h-4 w-px;
-    background-color: var(--color-input-border);
-  }
-
-  .search-dropdown {
-    @apply absolute right-2 top-12 z-10
-           rounded-xl shadow-lg overflow-hidden;
-    background-color: var(--color-background);
-    border: 1px solid var(--color-input-border);
-  }
-
-  .search-option {
-    @apply flex items-center gap-2 px-4 py-2 w-full cursor-pointer
-          transition;
-  }
-
-  .search-option:hover {
-    background-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .search-engine-icon {
-    @apply flex items-center justify-center
-         w-6 h-6 rounded-full
-         bg-white;
-  }
-
-  .search-engine-icon img {
-    @apply w-4 h-4;
-  }
 }
 
 /* =========================
    UTILITIES
    ========================= */
 @layer utilities {
-  .bg-auth {
-    background-image: url("/wallpapers/welcome.gif");
-    background-size: cover;
-    background-position: center;
-  }
-
-  .bg-unauth {
-    background-image: url("/wallpapers/welcome.gif");
-    background-size: cover;
-    background-position: center;
-  }
-
-  .animate-pop {
-    animation: pop 300ms ease-out;
-  }
-}
-
-/* =========================
-   KEYFRAMES (global)
-   ========================= */
-@keyframes pop {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-  }
+  /* ::-webkit-scrollbar {
+    display: none;
+  } */
 }
 
 /* =========================
@@ -129,21 +37,4 @@
   --color-background: #0f172a;
   --color-input-border: #f9fafb;
   --color-text-primary: #f9fafb;
-
-  --text-size: 1.25rem;
-
-  --text-small: calc(var(--text-size) * 0.875);
-  --text-body: clamp(
-    calc(var(--text-size) * 1),
-    calc(var(--text-size) * 1.25 + 1vw),
-    calc(var(--text-size) * 1.125)
-  );
-
-  --text-subheading: calc(var(--text-size) * 1.875);
-
-  --text-heading: clamp(
-    calc(var(--text-size) * 1.5),
-    calc(var(--text-size) * 1.5 + 2vw),
-    calc(var(--text-size) * 2.5)
-  );
 }
