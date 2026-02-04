@@ -6,9 +6,6 @@
    ========================= */
 @layer base {
   body {
-    background-image: url("/wallpapers/welcome.gif");
-    background-size: cover;
-    background-position: center;
     font-family: "Josefin Sans", sans-serif;
   }
 }
@@ -23,18 +20,41 @@
    UTILITIES
    ========================= */
 @layer utilities {
-  /* ::-webkit-scrollbar {
-    display: none;
-  } */
+  .animate-fade-up {
+    animation: fadeUp 180ms ease-out;
+  }
+
+  .animate-shake {
+    animation: shake 220ms ease-in-out;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
 }
 
 /* =========================
    THEME (Tailwind v4)
    ========================= */
 @theme {
-  --color-primary: #1e3a8a;
-  --color-secondary: #2563eb;
-  --color-background: #0f172a;
-  --color-input-border: #f9fafb;
-  --color-text-primary: #f9fafb;
 }
