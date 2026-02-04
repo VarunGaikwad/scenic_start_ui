@@ -1,3 +1,4 @@
+import { getDataFromLocalStorage, sliceString } from "@/utils";
 import axios from "axios";
 
 const client = axios.create({
@@ -9,10 +10,9 @@ const client = axios.create({
 });
 
 client.interceptors.request.use((config) => {
-  const token = localStorage.getItem("authToken");
-
+  const token = getDataFromLocalStorage("authToken");
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${sliceString(String(token), 27, 13)}`;
   }
 
   return config;

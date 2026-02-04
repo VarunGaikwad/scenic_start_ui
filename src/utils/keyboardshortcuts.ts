@@ -1,5 +1,5 @@
- const SHORTCUTS = {
-  SEARCH_BAR: ["control", "m"], // safe
+const SHORTCUTS = {
+  SEARCH_BAR: ["control", "m"],
 };
 
 type ShortcutHandler = () => void;
@@ -16,7 +16,7 @@ export function registerShortcut(keys: string[], handler: ShortcutHandler) {
 }
 
 function matchShortcut(e: KeyboardEvent, keys: string[]) {
-  const keySet = new Set(keys.map(k => k.toLowerCase()));
+  const keySet = new Set(keys.map((k) => k.toLowerCase()));
   const ctrl = keySet.has("control");
   const shift = keySet.has("shift");
   const alt = keySet.has("alt");
@@ -31,7 +31,7 @@ function matchShortcut(e: KeyboardEvent, keys: string[]) {
     return false;
 
   const mainKey = keys.find(
-    k => !["control", "shift", "alt", "meta"].includes(k.toLowerCase())
+    (k) => !["control", "shift", "alt", "meta"].includes(k.toLowerCase()),
   );
 
   return mainKey?.toLowerCase() === e.key.toLowerCase();

@@ -20,6 +20,10 @@
    UTILITIES
    ========================= */
 @layer utilities {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
   .animate-fade-up {
     animation: fadeUp 180ms ease-out;
   }

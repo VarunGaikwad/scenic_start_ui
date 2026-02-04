@@ -23,7 +23,13 @@ export default function ProtectedApp() {
   }, []);
 
   if (loading) {
-    return <Background>Checking authentication…</Background>;
+    return (
+      <Background>
+        <div className="grid place-content-center w-screen">
+          Checking authentication…
+        </div>
+      </Background>
+    );
   }
 
   return (

@@ -104,7 +104,7 @@ export default function Background({
         }}
       />
       <div
-        className="relative z-10 flex h-full w-full justify-center items-center text-sm"
+        className="relative z-10 flex h-svh"
         style={{ color: text_color === "light" ? "#fff" : "#000" }}
       >
         {children}

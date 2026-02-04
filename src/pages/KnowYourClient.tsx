@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { checkEmailExists, loginUser, registerUser } from "@/api";
-import { setDataToLocalStorage } from "@/utils";
+import { insertString, setDataToLocalStorage } from "@/utils";
 
 type Values = {
   name: string;
@@ -37,13 +37,13 @@ export default function KnowYourClient() {
       key: "name",
       text: "Let's start with your name",
       emoji: "🙂",
-      p: "Type your name",
+      placeholder: "Your name",
     },
     {
       key: "email",
       text: "What's your email",
       emoji: "📮",
-      p: "you@example.com",
+      placeholder: "you@example.com",
     },
     ...(emailExists === true
       ? [
@@ -51,7 +51,7 @@ export default function KnowYourClient() {
             key: "password",
             text: "Welcome back!",
             emoji: "👋",
-            p: "Enter your password",
+            placeholder: "Enter your password",
           },
         ]
       : emailExists === false
@@ -60,13 +60,13 @@ export default function KnowYourClient() {
               key: "password",
               text: "Create a password",
               emoji: "🛡️",
-              p: "At least 8 characters",
+              placeholder: "At least 8 characters",
             },
             {
               key: "confirmPassword",
               text: "One more time",
               emoji: "😄",
-              p: "Repeat password",
+              placeholder: "Repeat password",
             },
           ]
         : []),
@@ -78,14 +78,15 @@ export default function KnowYourClient() {
   const isPassword =
     current.key === "password" || current.key === "confirmPassword";
 
-  const goBack = () => {
-    if (step > 0) {
-      setStep((s) => s - 1);
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setValues((v) => ({ ...v, [current.key]: e.target.value }));
+  };
 
-      // Reset emailExists if going back from password step
-      if (step === 2 && emailExists !== null) {
-        setEmailExists(null);
-      }
+  const goBack = () => {
+    if (step === 0) return;
+    setStep(step - 1);
+    if (current.key === "password") {
+      setEmailExists(null);
     }
   };
 
@@ -97,7 +98,7 @@ export default function KnowYourClient() {
     if (!value) return setError("Field cannot be empty.");
 
     if (current.key === "email") {
-      if (!values.email.includes("@")) {
+      if (!/^\S+@\S+\.\S+$/.test(values.email)) {
         return setError("Invalid email.");
       }
 
@@ -106,13 +107,17 @@ export default function KnowYourClient() {
         const { data } = await checkEmailExists(values.email);
         setEmailExists(data.exists);
         setDataToLocalStorage("email", values.email);
-        setStep((s) => s + 1);
+        setStep(step + 1);
       } catch {
         setError("Email check failed.");
       } finally {
         setLoading(false);
       }
       return;
+    }
+
+    if (current.key === "password" && values.password.length < 8) {
+      return setError("Password must be at least 8 characters.");
     }
 
     if (
@@ -123,11 +128,10 @@ export default function KnowYourClient() {
     }
 
     if (step < steps.length - 1) {
-      setStep((s) => s + 1);
-      return;
+      setStep(step + 1);
+    } else {
+      await submit();
     }
-
-    await submit();
   };
 
   const submit = async () => {
@@ -137,13 +141,16 @@ export default function KnowYourClient() {
     try {
       if (emailExists) {
         const { data } = await loginUser(values.email, values.password);
-        setDataToLocalStorage("authToken", data.token);
+        const time = Date.now();
+        setDataToLocalStorage(
+          "authToken",
+          insertString(data.token, String(time), 27),
+        );
       } else {
         await registerUser(values.name, values.email, values.password);
         const { data } = await loginUser(values.email, values.password);
         setDataToLocalStorage("authToken", data.token);
       }
-
       window.location.reload();
     } catch {
       setError("Authentication failed.");
@@ -152,71 +159,56 @@ export default function KnowYourClient() {
     }
   };
 
-  return (
-    <div className="w-full max-w-lg px-6 relative">
-      {/* Go Back Button */}
-      {step > 0 && (
-        <button
-          onClick={goBack}
-          disabled={loading}
-          className="absolute top-0 left-6 flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity disabled:opacity-30"
-        >
-          <ArrowLeft size={16} />
-          <span>Go back</span>
-        </button>
-      )}
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      next();
+    }
+  };
 
-      <div key={step} className="animate-fade-up">
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-4">{current.emoji}</div>
-          <h1 className="text-2xl font-semibold">{current.text}</h1>
+  return (
+    <div className="flex justify-center items-end w-screen pb-10">
+      <div className="space-y-4 w-72 text-center">
+        <div className="text-xl font-bold">
+          {current.text} {current.emoji}
         </div>
 
-        {/* Input */}
-        <div key={error ?? "ok"} className="relative max-w-md mx-auto">
+        <div className="relative">
           <input
             ref={inputRef}
-            type={isPassword ? (showPassword ? "text" : "password") : "text"}
-            placeholder={current.p}
+            type={isPassword && !showPassword ? "password" : "text"}
+            placeholder={current.placeholder}
             value={values[current.key as keyof Values]}
-            onChange={(e) =>
-              setValues((prev) => ({
-                ...prev,
-                [current.key]: e.target.value,
-              }))
-            }
-            onKeyDown={(e) => e.key === "Enter" && next()}
-            className={`w-full bg-transparent border-b-2 px-2 py-3 text-center text-lg tracking-tight focus:outline-none ${
-              error
-                ? "border-red-500 animate-shake"
-                : "border-gray-300 focus:border-white"
-            }`}
+            onChange={onChange}
+            onKeyDown={onKeyDown}
+            className="w-full outline-0 border-b-2 text-center"
           />
 
           {isPassword && (
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 cursor-pointer"
+              className="absolute right-0 top-1"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           )}
         </div>
-      </div>
 
-      {error && <p className="mt-3 text-center text-red-300">{error}</p>}
+        {error && <div className="text-red-500 text-sm">{error}</div>}
 
-      <button
-        onClick={next}
-        disabled={loading}
-        className="mt-8 w-full max-w-md mx-auto block text-center text-lg font-medium cursor-pointer hover:underline disabled:opacity-50"
-      >
-        {loading ? "Please wait..." : "Continue →"}
-      </button>
-
-      <div className="mt-4 text-center text-xs opacity-60">
-        Step {step + 1} of {steps.length}
+        <div className="flex justify-between">
+          {step > 0 ? (
+            <button onClick={goBack}>
+              <ArrowLeft size={20} />
+            </button>
+          ) : (
+            <div /> // keeps layout stable
+          )}
+          <button onClick={next} disabled={loading}>
+            {loading ? "..." : "Next"}
+          </button>
+        </div>
       </div>
     </div>
   );
