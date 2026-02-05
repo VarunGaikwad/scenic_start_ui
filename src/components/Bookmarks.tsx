@@ -33,13 +33,7 @@ export default function Bookmarks() {
         ))}
       </div>
       <div className="flex-1">
-        <webview
-          src="https://chatgpt.com/?temporary-chat=true"
-          style={{
-            width: "100%",
-            height: "100%",
-          }}
-        ></webview>
+        <iframe src="https://chatgpt.com/?ext_cid=homey"></iframe>
       </div>
     </div>
   );
