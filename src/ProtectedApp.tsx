@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ScenicApp, KnowYourClient } from "@/pages";
 import { isMe } from "@/api";
 import { Background } from "./components";
+import { deleteDataFromLocalStorage } from "./utils";
 
 export default function ProtectedApp() {
   const [loading, setLoading] = useState(true);
@@ -13,6 +14,7 @@ export default function ProtectedApp() {
         const { status } = await isMe();
         setAuthenticated(status === 200);
       } catch {
+        deleteDataFromLocalStorage("authToken");
         setAuthenticated(false);
       } finally {
         setLoading(false);
@@ -25,9 +27,7 @@ export default function ProtectedApp() {
   if (loading) {
     return (
       <Background>
-        <div className="grid place-content-center w-screen">
-          Checking authentication…
-        </div>
+        <ScenicApp />
       </Background>
     );
   }

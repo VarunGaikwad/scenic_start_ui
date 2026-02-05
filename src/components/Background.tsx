@@ -14,7 +14,7 @@ type CachedImage = ImageResponseType & {
   date: string;
 };
 
-const CACHE_KEY = "daily-background";
+const CACHE_KEY = "dailyBackground";
 
 function getToday() {
   return new Date().toISOString().slice(0, 10);
@@ -84,8 +84,6 @@ export default function Background({
 
   return (
     <div className="relative h-svh w-screen">
-      {" "}
-      {/* Added h-svh w-screen */}
       <div
         className="absolute inset-0"
         style={{

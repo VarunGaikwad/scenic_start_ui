@@ -1,4 +1,6 @@
-export { default as SearchBar } from "./SearchBar";
-export { default as FavoriteIcon } from "./FavoriteIcon";
-export { default as Temperature } from "./Temperature";
 export { default as Background } from "./Background";
+export { default as DigitalClock } from "./DigitalClock";
+export { default as Weather } from "./Weather";
+export { default as Quote } from "./Quote";
+export { default as SearchEngine } from "./SearchEngine";
+export { default as Bookmarks } from "./Bookmarks";

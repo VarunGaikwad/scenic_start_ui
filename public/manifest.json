@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Scenic New Tab",
+  "version": "1.5",
+  "description": "Scenic",
+  "author": "Varun Gaikwad",
+  "permissions": ["tabs", "storage", "activeTab", "geolocation"],
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "optional_permissions": ["<all_urls>"],
+  "icons": {
+    "16": "icon.png",
+    "32": "icon.png",
+    "48": "icon.png"
+  }
+}

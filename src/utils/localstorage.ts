@@ -28,3 +28,11 @@ export const setDataToLocalStorage = (key: string, value: unknown): void => {
     console.error(`Error setting "${key}" in localStorage:`, error);
   }
 };
+
+export const deleteDataFromLocalStorage = (key: string): void => {
+  try {
+    localStorage.removeItem(key);
+  } catch (error) {
+    console.error(`Failed to remove localStorage key "${key}":`, error);
+  }
+};

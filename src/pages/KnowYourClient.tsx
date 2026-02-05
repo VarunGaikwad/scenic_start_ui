@@ -168,8 +168,8 @@ export default function KnowYourClient() {
 
   return (
     <div className="flex justify-center items-end w-screen pb-10">
-      <div className="space-y-4 w-72 text-center">
-        <div className="text-xl font-bold">
+      <div className="space-y-4 text-center w-full max-w-2xl px-4">
+        <div className="text-2xl sm:text-3xl font-semibold">
           {current.text} {current.emoji}
         </div>
 
@@ -181,31 +181,35 @@ export default function KnowYourClient() {
             value={values[current.key as keyof Values]}
             onChange={onChange}
             onKeyDown={onKeyDown}
-            className="w-full outline-0 border-b-2 text-center"
+            className={`w-full outline-none border-b-2 text-center text-lg sm:text-xl py-2 placeholder:text-gray-400 ${isPassword && "pr-10"}`}
           />
 
           {isPassword && (
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
-              className="absolute right-0 top-1"
+              className="absolute right-2 top-2"
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           )}
         </div>
 
-        {error && <div className="text-red-500 text-sm">{error}</div>}
+        {error && <div className="text-sm text-red-500 mt-1">{error}</div>}
 
         <div className="flex justify-between">
           {step > 0 ? (
-            <button onClick={goBack}>
+            <button onClick={goBack} className="text-base">
               <ArrowLeft size={20} />
             </button>
           ) : (
             <div /> // keeps layout stable
           )}
-          <button onClick={next} disabled={loading}>
+          <button
+            onClick={next}
+            disabled={loading}
+            className="text-base sm:text-lg font-medium"
+          >
             {loading ? "..." : "Next"}
           </button>
         </div>

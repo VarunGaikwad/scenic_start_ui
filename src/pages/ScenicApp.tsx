@@ -1,24 +1,23 @@
-import { FavoriteIcon, SearchBar, Temperature } from "@/components";
+import {
+  Bookmarks,
+  DigitalClock,
+  Quote,
+  SearchEngine,
+  Weather,
+} from "@/components";
 
 export default function ScenicApp() {
   return (
-    <div className="grid min-h-svh grid-rows-[auto_1fr_auto] overflow-hidden">
-      <header className="p-5">
-        <div
-          className="
-          grid items-center gap-5
-          grid-cols-1 md:grid-cols-3
-        "
-        >
-          <FavoriteIcon />
-          <SearchBar />
-          <Temperature />
-        </div>
-      </header>
-
-      <main className="p-5 overflow-auto">2</main>
-
-      <footer className="p-5">3</footer>
+    <div className="px-10 py-5 h-svh w-screen flex flex-col md:flex-row font-normal">
+      <div className="w-1/3 space-y-5 px-3.5">
+        <DigitalClock />
+        <Weather />
+        <Quote />
+      </div>
+      <div className="flex-1 flex flex-col space-y-5 px-3.5">
+        <SearchEngine />
+        <Bookmarks />
+      </div>
     </div>
   );
 }
