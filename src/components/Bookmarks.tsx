@@ -117,13 +117,19 @@ export default function Bookmarks() {
 
   useEffect(() => {
     setDataToLocalStorage(KEY, listOfBookmarks);
+  }, [listOfBookmarks]);
+
+  // Validate activeBookmarkId whenever it or bookmarks change
+  useEffect(() => {
     if (
       activeBookmarkId &&
+      listOfBookmarks.length > 0 &&
       !findBookmarkById(listOfBookmarks, activeBookmarkId)
     ) {
       setActiveBookmarkId(listOfBookmarks[0]?._id || null);
     }
-  }, [listOfBookmarks]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeBookmarkId, listOfBookmarks]);
 
   useEffect(() => {
     const handleClickOutside = () => setContextMenu(null);
@@ -167,12 +173,17 @@ export default function Bookmarks() {
 
     try {
       await deleteBookmark(contextMenu.bookmarkId);
-      setListOfBookmarks((prev) =>
-        removeBookmarkFromTree(prev, contextMenu.bookmarkId),
-      );
 
+      // Update bookmarks list
+      const updatedBookmarks = removeBookmarkFromTree(
+        listOfBookmarks,
+        contextMenu.bookmarkId,
+      );
+      setListOfBookmarks(updatedBookmarks);
+
+      // If we deleted the active folder, switch to the first available one
       if (activeBookmarkId === contextMenu.bookmarkId) {
-        setActiveBookmarkId(listOfBookmarks[0]?._id || null);
+        setActiveBookmarkId(updatedBookmarks[0]?._id || null);
       }
 
       setContextMenu(null);
@@ -386,7 +397,7 @@ export default function Bookmarks() {
         )}
 
         {/* Render children */}
-        {activeFolder?.children.map((child) => (
+        {(activeFolder?.children || []).map((child) => (
           <a
             key={child._id}
             href={child.url || "#"}
@@ -401,7 +412,7 @@ export default function Bookmarks() {
                 className="w-4 h-4 object-cover rounded-sm"
               />
             )}
-            <span className="text-xs truncate max-w-[80px]">{child.title}</span>
+            <span className="text-xs truncate max-w-20">{child.title}</span>
           </a>
         ))}
       </div>
