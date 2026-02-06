@@ -41,17 +41,18 @@ export default function Bookmarks() {
   );
 
   const [activeBookmarkId, setActiveBookmarkId] = useState<string | null>(
-    listOfBookmarks.length > 0 ? listOfBookmarks[0]._id : null,
+    listOfBookmarks[0]?._id || null,
   );
 
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
+
+  const [folderInput, setFolderInput] = useState("");
   const [contentPayload, setContentPayload] = useState<Content>({
     name: "",
     content: "",
-    type: null,
+    type: "link",
   });
-  const [folderInput, setFolderInput] = useState("");
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -65,15 +66,15 @@ export default function Bookmarks() {
     title: string;
   } | null>(null);
 
-  // -------------------- Helpers --------------------
+  // ---------------- Helpers ----------------
   const findBookmarkById = (
     bookmarks: Bookmark[],
     id: string,
   ): Bookmark | null => {
-    for (const bookmark of bookmarks) {
-      if (bookmark._id === id) return bookmark;
-      if (bookmark.children.length > 0) {
-        const found = findBookmarkById(bookmark.children, id);
+    for (const b of bookmarks) {
+      if (b._id === id) return b;
+      if (b.children.length > 0) {
+        const found = findBookmarkById(b.children, id);
         if (found) return found;
       }
     }
@@ -103,14 +104,10 @@ export default function Bookmarks() {
   ): Bookmark[] => {
     return bookmarks
       .filter((b) => b._id !== id)
-      .map((b) => ({
-        ...b,
-        children: removeBookmarkFromTree(b.children, id),
-      }));
+      .map((b) => ({ ...b, children: removeBookmarkFromTree(b.children, id) }));
   };
 
-  // -------------------- Effects --------------------
-  // Load bookmarks from API
+  // ---------------- Effects ----------------
   useEffect(() => {
     getBookmarkTree().then(({ data }) => {
       setListOfBookmarks(data);
@@ -118,7 +115,6 @@ export default function Bookmarks() {
     });
   }, []);
 
-  // Save to localStorage and ensure active bookmark exists
   useEffect(() => {
     setDataToLocalStorage(KEY, listOfBookmarks);
     if (
@@ -129,7 +125,6 @@ export default function Bookmarks() {
     }
   }, [listOfBookmarks]);
 
-  // Close context menu when clicking outside
   useEffect(() => {
     const handleClickOutside = () => setContextMenu(null);
     if (contextMenu) {
@@ -138,26 +133,19 @@ export default function Bookmarks() {
     }
   }, [contextMenu]);
 
-  // -------------------- Handlers --------------------
-  const handleClick = (id: string) => {
-    setActiveBookmarkId(id);
-  };
+  // ---------------- Handlers ----------------
+  const handleClickFolder = (id: string) => setActiveBookmarkId(id);
 
   const handleContextMenu = (
-    event: MouseEvent<HTMLDivElement>,
+    e: MouseEvent<HTMLDivElement>,
     bookmarkId: string,
     bookmarkTitle: string,
   ) => {
-    event.preventDefault();
-    setContextMenu({
-      x: event.clientX,
-      y: event.clientY,
-      bookmarkId,
-      bookmarkTitle,
-    });
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, bookmarkId, bookmarkTitle });
   };
 
-  const handleEdit = () => {
+  const handleEditFolder = () => {
     if (contextMenu) {
       setEditingBookmark({
         id: contextMenu.bookmarkId,
@@ -169,81 +157,41 @@ export default function Bookmarks() {
     }
   };
 
-  const handleDelete = async () => {
-    if (contextMenu) {
-      try {
-        const answer = confirm(
-          `Are you sure you want to delete "${contextMenu.bookmarkTitle}"? All its children will also be deleted.`,
-        );
-        if (!answer) return;
+  const handleDeleteFolder = async () => {
+    if (!contextMenu) return;
 
-        await deleteBookmark(contextMenu.bookmarkId);
+    const confirmDelete = confirm(
+      `Are you sure you want to delete "${contextMenu.bookmarkTitle}"? All its children will also be deleted.`,
+    );
+    if (!confirmDelete) return;
 
-        setListOfBookmarks((prev) =>
-          removeBookmarkFromTree(prev, contextMenu.bookmarkId),
-        );
+    try {
+      await deleteBookmark(contextMenu.bookmarkId);
+      setListOfBookmarks((prev) =>
+        removeBookmarkFromTree(prev, contextMenu.bookmarkId),
+      );
 
-        // Update active bookmark if needed
-        if (activeBookmarkId === contextMenu.bookmarkId) {
-          setActiveBookmarkId(listOfBookmarks[0]?._id || null);
-        }
-
-        setContextMenu(null);
-      } catch (err) {
-        console.error(err);
+      if (activeBookmarkId === contextMenu.bookmarkId) {
+        setActiveBookmarkId(listOfBookmarks[0]?._id || null);
       }
+
+      setContextMenu(null);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const renderBookmarks = (bookmarks: Bookmark[]) => {
-    return bookmarks.map((bookmark) => (
-      <div key={bookmark._id} className="ml-4 mt-1">
-        <div
-          className="flex items-center gap-2"
-          onContextMenu={(e) =>
-            handleContextMenu(e, bookmark._id, bookmark.title)
-          }
-        >
-          <BookmarkButton
-            active={activeBookmarkId === bookmark._id}
-            onClick={() => handleClick(bookmark._id)}
-          >
-            {bookmark.title}
-          </BookmarkButton>
-
-          {bookmark.type === "link" && bookmark.url && (
-            <a
-              href={bookmark.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 text-xs underline"
-            >
-              Open
-            </a>
-          )}
-        </div>
-
-        {/* Recursively render children */}
-        {bookmark.children.length > 0 && (
-          <div className="ml-4">{renderBookmarks(bookmark.children)}</div>
-        )}
-      </div>
-    ));
-  };
-
-  const onAddFolderSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleAddFolderSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     try {
       if (editingBookmark) {
         await putBookmark(editingBookmark.id, { title: folderInput });
-
         setListOfBookmarks((prev) =>
           updateBookmarkInTree(prev, editingBookmark.id, (b) => ({
             ...b,
             title: folderInput,
           })),
         );
-
         setActiveBookmarkId(editingBookmark.id);
         setEditingBookmark(null);
       } else {
@@ -251,7 +199,6 @@ export default function Bookmarks() {
         setListOfBookmarks((prev) => [...prev, data]);
         setActiveBookmarkId(data._id);
       }
-
       setIsFolderModalOpen(false);
       setFolderInput("");
     } catch (err) {
@@ -259,31 +206,26 @@ export default function Bookmarks() {
     }
   };
 
-  const onAddContentSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleAddContentSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!contentPayload.name || !contentPayload.content || !activeBookmarkId)
+      return;
+
+    const parent = findBookmarkById(listOfBookmarks, activeBookmarkId);
+    if (!parent) return console.error("Parent folder not found!");
+
     try {
-      if (!contentPayload.name || !contentPayload.content || !activeBookmarkId)
-        return;
-
-      const parentFolder = findBookmarkById(listOfBookmarks, activeBookmarkId);
-      if (!parentFolder) {
-        console.error("Parent folder not found!");
-        return;
-      }
-
       const { data } = await postBookmarkLink(
         contentPayload.name,
         contentPayload.content,
-        parentFolder._id,
+        parent._id,
       );
-
       setListOfBookmarks((prev) =>
-        updateBookmarkInTree(prev, parentFolder._id, (b) => ({
+        updateBookmarkInTree(prev, parent._id, (b) => ({
           ...b,
           children: [...b.children, data],
         })),
       );
-
       setContentPayload({ name: "", content: "", type: "link" });
       setIsContentModalOpen(false);
     } catch (err) {
@@ -291,11 +233,15 @@ export default function Bookmarks() {
     }
   };
 
-  // -------------------- Render --------------------
+  // ---------------- Render ----------------
+  const activeFolder = activeBookmarkId
+    ? findBookmarkById(listOfBookmarks, activeBookmarkId)
+    : null;
+
   return (
     <div className="flex-1 flex flex-col gap-5">
-      {/* Top folder buttons */}
-      <div className="text-xs flex gap-2.5">
+      {/* Folder bar */}
+      <div className="flex gap-2.5 overflow-x-auto text-xs">
         {listOfBookmarks.map(({ _id, title }) => (
           <div
             key={_id}
@@ -303,7 +249,7 @@ export default function Bookmarks() {
           >
             <BookmarkButton
               active={activeBookmarkId === _id}
-              onClick={() => handleClick(_id)}
+              onClick={() => handleClickFolder(_id)}
             >
               {title}
             </BookmarkButton>
@@ -320,6 +266,27 @@ export default function Bookmarks() {
         )}
       </div>
 
+      {/* Context menu */}
+      {contextMenu && (
+        <div
+          className="fixed bg-white text-black border border-gray-200 rounded-md shadow-lg py-1 z-50"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+        >
+          <button
+            onClick={handleEditFolder}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
+          >
+            Edit
+          </button>
+          <button
+            onClick={handleDeleteFolder}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
+          >
+            Delete
+          </button>
+        </div>
+      )}
+
       {/* Folder modal */}
       <Modal
         isOpen={isFolderModalOpen}
@@ -332,7 +299,7 @@ export default function Bookmarks() {
         size="lg"
       >
         <form
-          onSubmit={onAddFolderSubmit}
+          onSubmit={handleAddFolderSubmit}
           className="flex flex-col gap-5 w-full max-w-md mx-auto text-sm font-medium"
         >
           <input
@@ -340,8 +307,8 @@ export default function Bookmarks() {
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               setFolderInput(e.target.value)
             }
-            className="bg-transparent border-b-2 border-gray-400 focus:border-blue-500 outline-none p-2 placeholder-gray-400 text-sm"
             placeholder="Enter Folder name..."
+            className="bg-transparent border-b-2 border-gray-400 focus:border-blue-500 outline-none p-2 text-sm"
           />
           <button
             type="submit"
@@ -352,92 +319,91 @@ export default function Bookmarks() {
         </form>
       </Modal>
 
-      {/* Context menu */}
-      {contextMenu && (
-        <div
-          className="fixed bg-white text-black border border-gray-200 rounded-md shadow-lg py-1 z-50"
-          style={{ top: contextMenu.y, left: contextMenu.x }}
+      {/* Add content modal */}
+      <Modal
+        isOpen={isContentModalOpen}
+        onClose={() => setIsContentModalOpen(false)}
+        title="Add Content"
+        size="lg"
+      >
+        <form
+          onSubmit={handleAddContentSubmit}
+          className="flex flex-col gap-5 w-full max-w-md mx-auto text-sm font-medium"
         >
-          <button
-            onClick={handleEdit}
-            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
+          <input
+            value={contentPayload.name}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setContentPayload((prev) => ({ ...prev, name: e.target.value }))
+            }
+            placeholder="Enter Content Name..."
+            className="bg-transparent border-b-2 border-gray-400 focus:border-blue-500 outline-none p-2 text-sm"
+          />
+          <input
+            value={contentPayload.content}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setContentPayload((prev) => ({
+                ...prev,
+                content: e.target.value,
+              }))
+            }
+            placeholder="Enter Content..."
+            className="bg-transparent border-b-2 border-gray-400 focus:border-blue-500 outline-none p-2 text-sm"
+          />
+          <select
+            value={contentPayload.type || "link"}
+            onChange={(e) =>
+              setContentPayload((prev) => ({
+                ...prev,
+                type: e.target.value as "link",
+              }))
+            }
+            className="bg-transparent border-b-2 border-gray-400 focus:border-blue-500 outline-none p-2 text-sm"
           >
-            Edit
-          </button>
+            <option value="link">Link</option>
+          </select>
           <button
-            onClick={handleDelete}
-            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
+            type="submit"
+            className="w-full mt-4 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors duration-300 text-sm"
           >
-            Delete
+            Add Content
           </button>
-        </div>
-      )}
+        </form>
+      </Modal>
 
-      {/* Add content button */}
-      <div className="flex-1">
-        {listOfBookmarks.length > 0 && (
-          <div className="size-10 bg-black/15 grid place-content-center rounded-xl hover:bg-black cursor-pointer hover:border-dashed hover:border-2 transition-all duration-200 ease-in">
-            <Plus
-              onClick={() => {
-                setIsContentModalOpen(true);
-                setContentPayload({ name: "", content: "", type: "link" });
-              }}
-            />
-
-            <Modal
-              isOpen={isContentModalOpen}
-              onClose={() => setIsContentModalOpen(false)}
-              title="Add Content"
-              size="lg"
-            >
-              <form
-                onSubmit={onAddContentSubmit}
-                className="flex flex-col gap-5 w-full max-w-md mx-auto text-sm font-medium"
-              >
-                <input
-                  value={contentPayload.name}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setContentPayload((prev) => ({
-                      ...prev,
-                      name: e.target.value,
-                    }))
-                  }
-                  className="bg-transparent border-b-2 border-gray-400 focus:border-blue-500 outline-none p-2 placeholder-gray-400 text-sm"
-                  placeholder="Enter Content Name..."
-                />
-                <input
-                  value={contentPayload.content}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setContentPayload((prev) => ({
-                      ...prev,
-                      content: e.target.value,
-                    }))
-                  }
-                  className="bg-transparent border-b-2 border-gray-400 focus:border-blue-500 outline-none p-2 placeholder-gray-400 text-sm"
-                  placeholder="Enter Content..."
-                />
-                <select
-                  value={contentPayload.type || "link"}
-                  onChange={(e) =>
-                    setContentPayload((prev) => ({
-                      ...prev,
-                      type: e.target.value as "link",
-                    }))
-                  }
-                  className="bg-transparent border-b-2 border-gray-400 focus:border-blue-500 outline-none p-2 text-sm"
-                >
-                  <option value="link">Link</option>
-                </select>
-                <button
-                  type="submit"
-                  className="w-full mt-4 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors duration-300 text-sm"
-                >
-                  Add Content
-                </button>
-              </form>
-            </Modal>
+      {/* Children / content inline */}
+      <div className="flex flex-wrap gap-3 mt-4">
+        {/* Add content button */}
+        {activeFolder && (
+          <div
+            className="flex items-center justify-center w-10 h-10 rounded-lg cursor-pointer hover:bg-black/5 transition-colors duration-200"
+            onClick={() => {
+              setIsContentModalOpen(true);
+              setContentPayload({ name: "", content: "", type: "link" });
+            }}
+          >
+            <Plus size={20} />
           </div>
         )}
+
+        {/* Render children */}
+        {activeFolder?.children.map((child) => (
+          <a
+            key={child._id}
+            href={child.url || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-black/5 transition-colors duration-200"
+          >
+            {child.url && (
+              <img
+                src={`https://favicon.vemetric.com/${new URL(child.url).hostname}`}
+                alt={child.title}
+                className="w-4 h-4 object-cover rounded-sm"
+              />
+            )}
+            <span className="text-xs truncate max-w-[80px]">{child.title}</span>
+          </a>
+        ))}
       </div>
     </div>
   );
