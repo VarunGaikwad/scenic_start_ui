@@ -8,8 +8,8 @@ import {
 
 export default function ScenicApp() {
   return (
-    <div className="px-10 py-5 h-svh w-screen flex flex-col md:flex-row font-normal">
-      <div className="w-1/3 space-y-5 px-3.5">
+    <div className="px-10 py-5 h-svh w-screen flex flex-col md:flex-row font-hindi">
+      <div className="w-1/3 space-y-5 px-3.5 hidden lg:block">
         <DigitalClock />
         <Weather />
         <Quote />

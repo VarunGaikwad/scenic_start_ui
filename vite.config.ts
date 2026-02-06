@@ -28,5 +28,5 @@ export default defineConfig(({ mode }) => ({
     sourcemap: mode !== "production",
   },
 
-  base: "/",
+  base: "./",
 }));

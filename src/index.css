@@ -1,27 +1,28 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
 @import "tailwindcss";
-
-/* =========================
-   BASE (elements only)
-   ========================= */
-@layer base {
-  body {
-    font-family: "Inter", sans-serif;
-  }
-}
-
-/* =========================
-   COMPONENTS
-   ========================= */
-@layer components {
-}
 
 /* =========================
    UTILITIES
    ========================= */
 @layer utilities {
-  ::-webkit-scrollbar {
+  .perspective {
+    perspective: 1000px;
+  }
+
+  .transform-style-preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
 
@@ -34,6 +35,9 @@
   }
 }
 
+/* =========================
+   KEYFRAMES
+   ========================= */
 @keyframes fadeUp {
   from {
     opacity: 0;
@@ -63,4 +67,5 @@
    ========================= */
 @theme {
   --font-hindi: "Hind", sans-serif;
+  --font-inter: "Inter", sans-serif;
 }

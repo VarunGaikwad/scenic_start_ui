@@ -97,6 +97,10 @@ export default function KnowYourClient() {
     const value = values[current.key as keyof Values];
     if (!value) return setError("Field cannot be empty.");
 
+    if (current.key === "name") {
+      setDataToLocalStorage("name", values.name);
+    }
+
     if (current.key === "email") {
       if (!/^\S+@\S+\.\S+$/.test(values.email)) {
         return setError("Invalid email.");
