@@ -1,0 +1,352 @@
+{
+  "displayName": "ヴァルンさん",
+  "links": [
+    {
+      "title": "Anki",
+      "url": "https://ankiweb.net/decks"
+    },
+    {
+      "title": "Cloud Campus",
+      "url": "https://ccampus.org/learners/Portal/"
+    },
+    {
+      "title": "ChatGPT",
+      "url": "https://chatgpt.com/?temporary-chat=true"
+    },
+    {
+      "title": "ReTOMOS-VER",
+      "url": "https://rtmsver.jpn.mds.honda.com/p/HOME",
+      "folder": "ReTOMOS"
+    },
+    {
+      "title": "Japanese Reflection",
+      "url": "https://mypageintl.fastoffer.co.jp/jclass"
+    },
+    {
+      "title": "Honda IC Card Transaction",
+      "url": "https://biz.hm.jp.honda.com/mtl10/logon.do",
+      "folder": "Work"
+    },
+    {
+      "title": "Honda Udemy",
+      "url": "https://hondajp.udemy.com/organization/home/"
+    },
+    {
+      "title": "Stress Test",
+      "url": "https://www.kokoro.jp.fujitsu.com/e-shindan/"
+    },
+    {
+      "title": "Portfolio",
+      "url": "https://portfolio-drab-nine-70.vercel.app/#about"
+    },
+    {
+      "title": "TeamCenter PRD",
+      "url": "https://sk.jp.hondaweb.com/rtms_tc_prd2/#/showHome",
+      "folder": "TeamCenter"
+    },
+    {
+      "title": "TeamCenter-DEV",
+      "url": "https://dev.jp.hondaweb.com/rtms_tc_ver2/#/showHome",
+      "folder": "TeamCenter"
+    },
+    {
+      "title": "Honda PC Log Alert",
+      "url": "http://hm-hr01.jpn.mds.honda.com/pclog/a1/top/index.php",
+      "folder": "Work"
+    },
+    {
+      "title": "Translator",
+      "url": "https://chatgpt.com/c/68b6374e-215c-832c-95ea-f63f603c77cf"
+    },
+    {
+      "title": "Leave Tracker",
+      "url": "http://prd-a-itboap01.jpn.mds.honda.com/Saku_ZaitakuShien/",
+      "folder": "Work"
+    },
+    {
+      "title": "Tochigi Portal",
+      "url": "https://globalsps.mds.honda.com/apps/hgtportal/SitePages/home.aspx"
+    },
+    {
+      "title": "LRT Time-Table",
+      "url": "https://aistudio.google.com/prompts/1FSbJVeOHyiDc0AEbagCvlwZWE1Px3mIk"
+    },
+    {
+      "title": "Global Honda Portal",
+      "url": "https://globalhonda.sharepoint.com/sites/jphm100367/SitePages/Home.aspx"
+    },
+    {
+      "title": "Global  Honda Sharepoint",
+      "url": "https://globalhonda.sharepoint.com/sites/jphm100367/SitePages/Home.aspx"
+    },
+    {
+      "title": "ReTOMOS Portal",
+      "url": "https://globalhonda.sharepoint.com/sites/jphm104831/SitePages/Home.aspx",
+      "folder": "ReTOMOS"
+    },
+    {
+      "title": "SAP BAS",
+      "url": "https://28337d26trial.us10cf.trial.applicationstudio.cloud.sap/index.html"
+    },
+    {
+      "title": "GITSP",
+      "url": "https://globalhonda.sharepoint.com/sites/jphm100055/SitePages/JP_GITSP_About.aspx"
+    },
+    {
+      "title": "Login/Logout",
+      "url": "https://jp.hondaweb.com/g_jik_p401prd1/jkc-web/application/html/SIDPC014/SIDPC014/",
+      "folder": "Work"
+    },
+    {
+      "title": "ReTOMOS Issue Tracker",
+      "url": "https://globalhonda.sharepoint.com/sites/jphgt105055/Lists/ReTOMOS_ver10/view3.aspx",
+      "folder": "ReTOMOS"
+    },
+    {
+      "title": "Grafana",
+      "url": "https://mx-monitor-prd.jpn.mds.honda.com/grafana/d/vDZHQgA7k/mendix-app-dashboard-native?orgId=1",
+      "folder": "ReTOMOS"
+    },
+    {
+      "title": "ReTOMOS Manual",
+      "url": "https://globalhonda.sharepoint.com/sites/jphm104831/SitePages/%E3%83%9E%E3%83%8B%E3%83%A5%E3%82%A2%E3%83%AB.aspx",
+      "folder": "ReTOMOS"
+    },
+    {
+      "title": "Gyro",
+      "url": "https://gyro.honda.co.jp/vdesk/webtop.eui?z=/Common/HM01_Split_na_res&webtop=/Common/webtop_na&webtop_type=webtop_na_only"
+    },
+    {
+      "title": "Japanese Meeting Translation",
+      "url": "https://globalhonda-my.sharepoint.com/:w:/r/personal/j0986978_jpn_mds_honda_com/Documents/Translation/Translator.docx?d=w4e97f59fd164456b898d9e98b40a571a&csf=1&web=1&e=9wRh6Z"
+    },
+    {
+      "title": "Honda DG COLLAB SITE",
+      "url": "https://globalhonda.sharepoint.com/sites/jphgt103879/SitePages/%E5%8F%96%E5%BC%95%E5%85%88%E5%85%B1%E5%89%B5%E3%83%98%E3%83%AB%E3%83%97%E3%82%B5%E3%82%A4%E3%83%88---Business-Partner-Co-Creation-Help-Site.aspx"
+    },
+    {
+      "title": "VMWare",
+      "url": "https://prd-vc-s3101b.jpn.mds.honda.com/ui/app/folder;nav=h/urn:vmomi:Folder:group-d1:ffdd7614-b2ce-401a-8062-c1930dc19b4d/summary"
+    },
+    {
+      "title": "日本語ビギナークラス",
+      "url": "https://teams.microsoft.com/l/meetup-join/19%3ameeting_OGViODM5ZmUtMWRiNy00MGJiLWFiZjctY2Y2OTQ3ZTFiMmRi%40thread.v2/0?context=%7b%22Tid%22%3a%22f710c11b-5996-4ce5-9ccf-1b64a2d5fb0d%22%2c%22Oid%22%3a%22955390d0-3f14-4b22-918b-367542553383%22%7d"
+    },
+    {
+      "title": "Honda Translation",
+      "url": "https://honda.questetra.net/OR/ProcessModel/1109/view?q-lid=U9IPcNUPKMpPTi0u9s1PSc3Rz8ksLgnLTC1XAgA%3D&q-ls=q1ZKzs8pzc0rVrKKViooyk9OLS72zU9JzfHMS8v3S8xNVdJRygPywcxYHaXC0tSiSiWraqXkxJLU9HwQO680JwcuoZRraGhgGf-4YcLjxv2PmzofN7Y837_7xYrNjxsmPm6e-rhp4eOmJY-bV0MFmxY9bp7-uHkV0JbiksSiotQU_7wcoDFpiTnFqbUQwRIlKwMdpZzM3Ewgy9CgFgA%3D"
+    },
+    {
+      "title": "Takada-san PPT",
+      "url": "https://globalhonda.sharepoint.com/:p:/r/sites/jphgt102870/_layouts/15/Doc.aspx?sourcedoc=%7BF804B61B-B5C5-4E0B-9212-900976C00320%7D&file=%E3%82%B0%E3%83%AD%E3%83%BC%E3%83%90%E3%83%AB%E6%8E%A1%E7%94%A8%E8%80%85%E5%90%91%E3%81%91%E3%81%AE%E4%BA%BA%E5%93%A1%E9%85%8D%E7%BD%AE%E3%81%A8%E7%A0%94%E4%BF%AE%E8%A8%88%E7%94%BB(Staffing%20and%20training%20plans%20for%20global%20recruits)_20250526.pptx&action=edit&mobileredirect=true"
+    },
+    {
+      "title": "Release Document",
+      "url": "https://globalhonda.sharepoint.com/sites/gjp02460/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2Fgjp02460%2FShared%20Documents%2F%E9%81%A9%E7%94%A8%EF%BC%94%2F12%5F%E8%AA%B2%E9%A1%8C%E7%AE%A1%E7%90%86%2F11%5F%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E9%A0%85%E7%9B%AE&viewid=4afed60f%2D2713%2D4585%2Dbddb%2D54034d132942&csf=1&web=1&e=LX7xrS&CID=b84bae69%2D30de%2D4bf0%2D9743%2D2fad07365bfa&FolderCTID=0x012000E90CE8C5FDFE6C45A43A8920370D0917",
+      "folder": "ReTOMOS"
+    },
+    {
+      "title": "AWS ReTOMOS",
+      "url": "https://d-95670634a5.awsapps.com/start/#/?tab=accounts",
+      "folder": "ReTOMOS"
+    },
+    {
+      "title": "ReTOMOS-PRD",
+      "url": "https://rtmsprd.jpn.mds.honda.com/index.html",
+      "folder": "ReTOMOS"
+    },
+    {
+      "title": "Honda Health Portal",
+      "url": "https://honda.hmneo.jp/HM-neo/MonshinTouroku/Action",
+      "folder": "Work"
+    },
+    {
+      "title": "Loop",
+      "url": "https://loop.cloud.microsoft/p/eyJ3Ijp7InUiOiJodHRwczovL2dsb2JhbGhvbmRhLnNoYXJlcG9pbnQuY29tLz9uYXY9Y3owbE1rWW1aRDFpSVhwNFNpMVZUVzU2TkZWWFQwbFBObTFvU0VaMU4wdG1SVmxhT1ZCUllsWkhhR2szV1RCM1NtRnZiSHBxUldWeFF6Rm5UVnBTV21oMVVVOUVkRE14VDBZbVpqMHdNVk0wUTFCRVFWQk5TalJETmpNMVZUTlRWa0ZKUWxkQ1JEVkNSbGhSUlZsUUptTTlKbVpzZFdsa1BURSUzRCIsInIiOmZhbHNlfSwicCI6eyJ1IjoiaHR0cHM6Ly9nbG9iYWxob25kYS5zaGFyZXBvaW50LmNvbS86Zmw6L3IvY29udGVudHN0b3JhZ2UvQ1NQXzUwN2UxMmNmLWYzYzktNDVlMS04ZTIwLWVlYTY4NDcxNmVlYy8lRTMlODMlODklRTMlODIlQUQlRTMlODMlQTUlRTMlODMlQTElRTMlODMlQjMlRTMlODMlODglMjAlRTMlODMlQTklRTMlODIlQTQlRTMlODMlOTYlRTMlODMlQTklRTMlODMlQUEvTG9vcEFwcERhdGEvVW50aXRsZWQlMjAxLmxvb3A%2FZD13ZGEyMTJhMDA2YjEwNDY1YWI2YTNkNzJhYTU4YjZiZDkmY3NmPTEmd2ViPTEmbmF2PWN6MGxNa1pqYjI1MFpXNTBjM1J2Y21GblpTVXlSa05UVUY4MU1EZGxNVEpqWmkxbU0yTTVMVFExWlRFdE9HVXlNQzFsWldFMk9EUTNNVFpsWldNbVpEMWlJWHA0U2kxVlRXNTZORlZYVDBsUE5tMW9TRVoxTjB0bVJWbGFPVkJSWWxaSGFHazNXVEIzU21GdmJIcHFSV1Z4UXpGblRWcFNXbWgxVVU5RWRETXhUMFltWmowd01WTTBRMUJFUVVsQlJrbFJOVlZGUkV4TVNrUk1Ua2syV0VaTFUxbFhNalphSm1NOUpUSkdKbVpzZFdsa1BURW1ZVDFNYjI5d1FYQndKbkE5SlRRd1pteDFhV1I0SlRKR2JHOXZjQzF3WVdkbExXTnZiblJoYVc1bGNpWjRQU1UzUWlVeU1uY2xNaklsTTBFbE1qSlVNRkpVVlVoNGJtSkhPV2xaVjNodllqSTFhMWxUTlhwaFIwWjVXbGhDZG1GWE5UQk1iVTUyWWxoNGFVbFljRFJUYVRGV1ZGYzFOazVHVmxoVU1HeFFUbTB4YjFORldqRk9NSFJ0VWxac1lVOVdRbEpaYkZwSVlVZHJNMWRVUWpOVGJVWjJZa2h3Y1ZKWFZuaFJla1p1VkZad1UxZHRhREZWVlRsRlpFUk5lRlF3V2poTlJFWlVUa1ZPVVZKRlJsRlVWVzh3VVhwWmVrNVdWWHBWTVZwQ1UxVktXRkZyVVRGUmExcFpWVlZXV2xWQkpUTkVKVE5FSlRJeUpUSkRKVEl5YVNVeU1pVXpRU1V5TWprNU9EWXhaV0k1TFdVM09HWXROR1F6WmkwNU5HTTJMV0ZpWkRBd1lXTmhOelEwWmlVeU1pVTNSQSUzRCUzRCIsInIiOmZhbHNlfSwiaSI6eyJpIjoiOTk4NjFlYjktZTc4Zi00ZDNmLTk0YzYtYWJkMDBhY2E3NDRmIn19"
+    },
+    {
+      "title": "Azure Repo",
+      "url": "https://dev.azure.com/ReTOMOS-Remake/_git/ReTOMOS_Remake",
+      "folder": "ReTOMOS"
+    },
+    {
+      "title": "NHK EASY",
+      "url": "https://news.web.nhk/news/easy/"
+    },
+    {
+      "title": "RedMine",
+      "url": "http://10.213.13.133/projects/retomos_remake",
+      "folder": "ReTOMOS"
+    },
+    {
+      "title": "SAP Trial",
+      "url": "https://cockpit.hanatrial.ondemand.com/trial/#/globalaccount/a84fcbfd-2c7d-4c04-a2c9-a7d490a0965b/subaccount/7efd597a-43f2-4e83-b5da-a7c916b03414/subaccountoverview"
+    },
+    {
+      "title": "Honda Questetra",
+      "url": "https://honda.questetra.net/"
+    },
+    {
+      "title": "Excel Overtime",
+      "url": "https://globalhonda.sharepoint.com/:x:/r/sites/jphgt102870/_layouts/15/Doc.aspx?sourcedoc=%7B4F136301-4F2F-473D-B07D-DC8CFF759708%7D&file=%25u3010ECM%25u30b7%25u30b9%25u30c6%25u30e04%25u8ab2%25u3011%25u7814%25u7a76%25u958b%25u767a%25u9069%25u7528%25u9664%25u5916%20%25u6708%25u5ea6%25u30fb%25u5e74%25u67a0%25u8d85%25u904e%25u5354%25u8b70_4%25u6708%25u5ea6.xlsx&action=default&mobileredirect=true",
+      "folder": "Work"
+    },
+    {
+      "title": "Pune Grand Tour",
+      "url": "https://punegrandtour.in/live-update/"
+    }
+  ],
+  "isAuth": true,
+  "unsplashImage": {
+    "id": "QcYcBYxlaQg",
+    "slug": "a-river-running-through-a-lush-green-valley-QcYcBYxlaQg",
+    "alternative_slugs": {
+      "en": "a-river-running-through-a-lush-green-valley-QcYcBYxlaQg",
+      "es": "un-rio-que-atraviesa-un-exuberante-valle-verde-QcYcBYxlaQg",
+      "ja": "緑豊かな渓谷を流れる川-QcYcBYxlaQg",
+      "fr": "une-riviere-qui-traverse-une-vallee-verdoyante-QcYcBYxlaQg",
+      "it": "un-fiume-che-attraversa-una-valle-verde-e-lussureggiante-QcYcBYxlaQg",
+      "ko": "무성한-녹색-계곡을-흐르는-강-QcYcBYxlaQg",
+      "de": "ein-fluss-der-durch-ein-uppiges-grunes-tal-fliesst-QcYcBYxlaQg",
+      "pt": "um-rio-que-atravessa-um-vale-verdejante-QcYcBYxlaQg"
+    },
+    "created_at": "2023-03-01T10:32:40Z",
+    "updated_at": "2025-06-23T03:50:39Z",
+    "promoted_at": null,
+    "width": 6016,
+    "height": 4016,
+    "color": "#594040",
+    "blur_hash": "LfG7}MxsV@Rj~Vxqf6ay%f$$s:bH",
+    "description": null,
+    "alt_description": "a river running through a lush green valley",
+    "breadcrumbs": [],
+    "urls": {
+      "raw": "https://images.unsplash.com/photo-1677666457674-85e4198c05b6?ixid=M3w3Njc3Nzh8MHwxfHNlYXJjaHw1fHxqYXBhbiUyMGJlYXV0aWZ1bCUyMGxhbmRzY2FwZXxlbnwwfDB8fHwxNzUwNjYxMjk0fDA&ixlib=rb-4.1.0",
+      "full": "https://images.unsplash.com/photo-1677666457674-85e4198c05b6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3Njc3Nzh8MHwxfHNlYXJjaHw1fHxqYXBhbiUyMGJlYXV0aWZ1bCUyMGxhbmRzY2FwZXxlbnwwfDB8fHwxNzUwNjYxMjk0fDA&ixlib=rb-4.1.0&q=85",
+      "regular": "https://images.unsplash.com/photo-1677666457674-85e4198c05b6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Njc3Nzh8MHwxfHNlYXJjaHw1fHxqYXBhbiUyMGJlYXV0aWZ1bCUyMGxhbmRzY2FwZXxlbnwwfDB8fHwxNzUwNjYxMjk0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "small": "https://images.unsplash.com/photo-1677666457674-85e4198c05b6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Njc3Nzh8MHwxfHNlYXJjaHw1fHxqYXBhbiUyMGJlYXV0aWZ1bCUyMGxhbmRzY2FwZXxlbnwwfDB8fHwxNzUwNjYxMjk0fDA&ixlib=rb-4.1.0&q=80&w=400",
+      "thumb": "https://images.unsplash.com/photo-1677666457674-85e4198c05b6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Njc3Nzh8MHwxfHNlYXJjaHw1fHxqYXBhbiUyMGJlYXV0aWZ1bCUyMGxhbmRzY2FwZXxlbnwwfDB8fHwxNzUwNjYxMjk0fDA&ixlib=rb-4.1.0&q=80&w=200",
+      "small_s3": "https://s3.us-west-2.amazonaws.com/images.unsplash.com/small/photo-1677666457674-85e4198c05b6"
+    },
+    "links": {
+      "self": "https://api.unsplash.com/photos/a-river-running-through-a-lush-green-valley-QcYcBYxlaQg",
+      "html": "https://unsplash.com/photos/a-river-running-through-a-lush-green-valley-QcYcBYxlaQg",
+      "download": "https://unsplash.com/photos/QcYcBYxlaQg/download?ixid=M3w3Njc3Nzh8MHwxfHNlYXJjaHw1fHxqYXBhbiUyMGJlYXV0aWZ1bCUyMGxhbmRzY2FwZXxlbnwwfDB8fHwxNzUwNjYxMjk0fDA",
+      "download_location": "https://api.unsplash.com/photos/QcYcBYxlaQg/download?ixid=M3w3Njc3Nzh8MHwxfHNlYXJjaHw1fHxqYXBhbiUyMGJlYXV0aWZ1bCUyMGxhbmRzY2FwZXxlbnwwfDB8fHwxNzUwNjYxMjk0fDA"
+    },
+    "likes": 22,
+    "liked_by_user": false,
+    "current_user_collections": [],
+    "sponsorship": null,
+    "topic_submissions": {
+      "spirituality": {
+        "status": "rejected"
+      },
+      "nature": {
+        "status": "rejected"
+      },
+      "travel": {
+        "status": "rejected"
+      },
+      "wallpapers": {
+        "status": "rejected"
+      }
+    },
+    "asset_type": "photo",
+    "user": {
+      "id": "zsp8mlGylOk",
+      "updated_at": "2025-06-21T02:52:59Z",
+      "username": "miyatankun",
+      "name": "Takashi Miyazaki",
+      "first_name": "Takashi",
+      "last_name": "Miyazaki",
+      "twitter_username": null,
+      "portfolio_url": "https://miyatankun.wixsite.com/miyatankun-photograp",
+      "bio": "I mainly take landscapes and portraits.",
+      "location": "Fuchu, Tokyo",
+      "links": {
+        "self": "https://api.unsplash.com/users/miyatankun",
+        "html": "https://unsplash.com/@miyatankun",
+        "photos": "https://api.unsplash.com/users/miyatankun/photos",
+        "likes": "https://api.unsplash.com/users/miyatankun/likes",
+        "portfolio": "https://api.unsplash.com/users/miyatankun/portfolio"
+      },
+      "profile_image": {
+        "small": "https://images.unsplash.com/profile-1720500601291-7bf031fc88fcimage?ixlib=rb-4.1.0&crop=faces&fit=crop&w=32&h=32",
+        "medium": "https://images.unsplash.com/profile-1720500601291-7bf031fc88fcimage?ixlib=rb-4.1.0&crop=faces&fit=crop&w=64&h=64",
+        "large": "https://images.unsplash.com/profile-1720500601291-7bf031fc88fcimage?ixlib=rb-4.1.0&crop=faces&fit=crop&w=128&h=128"
+      },
+      "instagram_username": "miyatankun",
+      "total_collections": 3,
+      "total_likes": 2753,
+      "total_photos": 231,
+      "total_promoted_photos": 24,
+      "total_illustrations": 0,
+      "total_promoted_illustrations": 0,
+      "accepted_tos": true,
+      "for_hire": true,
+      "social": {
+        "instagram_username": "miyatankun",
+        "portfolio_url": "https://miyatankun.wixsite.com/miyatankun-photograp",
+        "twitter_username": null,
+        "paypal_email": null
+      }
+    }
+  },
+  "lastDate": "Fri Feb 06 2026",
+  "timeZones": [
+    {
+      "title": "Japan 🖱️",
+      "zone": "Asia/Tokyo"
+    },
+    {
+      "title": "Pune 🏡",
+      "zone": "Asia/Calcutta"
+    }
+  ],
+  "weather": {
+    "coord": {
+      "lon": 140.0177,
+      "lat": 36.573
+    },
+    "weather": [
+      {
+        "id": 801,
+        "main": "Clouds",
+        "description": "few clouds",
+        "icon": "02n"
+      }
+    ],
+    "base": "stations",
+    "main": {
+      "temp": 7.95,
+      "feels_like": 4.94,
+      "temp_min": 7.95,
+      "temp_max": 7.95,
+      "pressure": 1010,
+      "humidity": 51,
+      "sea_level": 1010,
+      "grnd_level": 998
+    },
+    "visibility": 10000,
+    "wind": {
+      "speed": 5.2,
+      "deg": 33,
+      "gust": 7.58
+    },
+    "clouds": {
+      "all": 12
+    },
+    "dt": 1770368267,
+    "sys": {
+      "country": "JP",
+      "sunrise": 1770327476,
+      "sunset": 1770365401
+    },
+    "timezone": 32400,
+    "id": 1849053,
+    "name": "Utsunomiya",
+    "cod": 200
+  },
+  "isBusSchedule": true
+}
