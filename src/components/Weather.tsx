@@ -113,7 +113,7 @@ export default function Weather() {
   const pressure = info?.pressure ?? null;
 
   return (
-    <div className="bg-black/15 shadow-2xl p-5 rounded-4xl w-full max-w-md">
+    <div className="bg-black/30 shadow-2xl p-5 rounded-4xl w-full max-w-md">
       {/* Top: Location + Description */}
       <div className="mb-4">
         <div className="flex gap-2 items-center">

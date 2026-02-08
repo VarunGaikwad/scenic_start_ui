@@ -27,18 +27,54 @@
   }
 
   .animate-fade-up {
-    animation: fadeUp 180ms ease-out;
+    animation: fade-up 180ms ease-out;
   }
 
   .animate-shake {
     animation: shake 220ms ease-in-out;
+  }
+
+  .animate-border {
+    animation: border-style 3s linear infinite;
+  }
+}
+
+@layer components {
+  .bookmark-btn-common {
+    @apply relative
+    w-40
+    min-h-11
+    rounded-2xl
+    cursor-pointer
+    transition
+    duration-200
+    border
+    border-transparent
+
+    before:absolute
+    before:inset-0
+    before:rounded-2xl
+    before:border-2
+    before:border-dashed
+    before:border-current
+    before:pointer-events-none
+
+    hover:before:border-solid;
+  }
+
+  .animate-border-style::before {
+    animation: border-style 2.5s ease-in-out infinite;
+  }
+
+  .animate-border-style:hover::before {
+    animation: border-style 2.5s ease-in-out infinite;
   }
 }
 
 /* =========================
    KEYFRAMES
    ========================= */
-@keyframes fadeUp {
+@keyframes fade-up {
   from {
     opacity: 0;
     transform: translateY(8px);
@@ -59,6 +95,16 @@
   }
   75% {
     transform: translateX(4px);
+  }
+}
+
+@keyframes border-style {
+  0%,
+  100% {
+    border-radius: 16px;
+  }
+  50% {
+    border-radius: 20px;
   }
 }
 

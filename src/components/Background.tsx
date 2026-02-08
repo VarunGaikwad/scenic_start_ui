@@ -5,6 +5,7 @@ type ImageResponseType = {
   id: string;
   image_url: string;
   is_welcome: boolean;
+  media_type: "image" | "video";
   overlay_color: string;
   overlay_opacity: number;
   text_color: "light" | "dark";
@@ -80,19 +81,34 @@ export default function Background({
     );
   }
 
-  const { image_url, overlay_color, overlay_opacity, text_color } = imageObject;
+  const { image_url, overlay_color, overlay_opacity, text_color, media_type } =
+    imageObject;
 
   return (
     <div className="relative h-svh w-screen">
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `url(${image_url})`,
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
+      {/* Background Layer */}
+      <div className="absolute inset-0">
+        {media_type === "video" ? (
+          <video
+            src={image_url}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div
+            className="h-full w-full"
+            style={{
+              backgroundImage: `url(${image_url})`,
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          />
+        )}
+      </div>
       {/* Overlay */}
       <div
         className="absolute inset-0"
@@ -102,7 +118,7 @@ export default function Background({
         }}
       />
       <div
-        className="relative z-10 flex h-svh"
+        className="relative z-10 flex h-svh text-xs"
         style={{ color: text_color === "light" ? "#fff" : "#000" }}
       >
         {children}

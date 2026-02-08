@@ -14,21 +14,14 @@ export default function Quote() {
   const [currentType, setCurrentType] = useState<ShayariQuoteResponseType>(
     getDataFromLocalStorage(KEY) || "shayari",
   );
-
-  const [text, setText] = useState("");
-  const [author, setAuthor] = useState("");
+  const localData = getDataFromLocalStorage<ShayariQuoteResponse | null>(
+    currentType,
+  );
+  const [text, setText] = useState(localData?.text || "");
+  const [author, setAuthor] = useState(localData?.author || "");
   const [isFlipping, setIsFlipping] = useState(false);
 
   useEffect(() => {
-    const localData = getDataFromLocalStorage<ShayariQuoteResponse | null>(
-      currentType,
-    );
-
-    if (localData) {
-      setText(localData.text);
-      setAuthor(localData.author);
-    }
-
     (async () => {
       const today = new Date().toISOString().slice(0, 10);
 
@@ -71,7 +64,7 @@ export default function Quote() {
     <div className="perspective cursor-pointer" onClick={handleFlip}>
       <div
         className={`
-          relative p-5 rounded-4xl bg-black/15 text-sm font-hindi
+          relative p-5 rounded-4xl bg-black/30 font-hindi
           transition-transform duration-600 ease-in-out
           transform-style-preserve-3d
           ${isFlipping ? "rotate-y-180" : ""}

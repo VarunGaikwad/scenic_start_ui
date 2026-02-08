@@ -199,7 +199,7 @@ export default function KnowYourClient() {
           )}
         </div>
 
-        {error && <div className="text-sm text-red-500 mt-1">{error}</div>}
+        {error && <div className="text-red-500 mt-1">{error}</div>}
 
         <div className="flex justify-between">
           {step > 0 ? (

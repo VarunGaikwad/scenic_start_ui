@@ -76,11 +76,12 @@ export default function SearchEngine() {
   }, [ENGINES, currentEngine]);
 
   return (
-    <div className="w-full bg-black/15 flex items-center rounded-full p-2.5">
+    <div className="w-full bg-black/30 flex items-center rounded-full p-2.5 px-5">
       <Search />
       <input
+        autoFocus
         type="text"
-        className="w-full outline-none pl-2.5 bg-transparent"
+        className="w-full outline-none px-5 bg-transparent"
         placeholder={`Search ${ENGINES[currentEngine].name}...`}
         value={searchText}
         onChange={handleChange}
