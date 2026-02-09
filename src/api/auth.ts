@@ -1,3 +1,4 @@
+import type { BookmarkTreeType } from "@/interface";
 import client from "./client";
 
 const PATH = `/auth`;
@@ -36,19 +37,28 @@ export const postBookmarkFolder = (title: string, parentId?: string | null) =>
     type: "folder",
     title,
     parentId: parentId ?? null,
+    children: [],
   });
 
-export const postBookmarkLink = (
+export type Bookmark = {
+  id: string;
+  title: string;
+  url: string;
+};
+export const postBookmarkLink = async (
   title: string,
   url: string,
   parentId?: string | null,
-) =>
-  client.post(`${PATH}/bookmark`, {
+): Promise<BookmarkTreeType> => {
+  const res = await client.post<BookmarkTreeType>(`${PATH}/bookmark`, {
     type: "link",
     title,
     url,
     parentId: parentId ?? null,
   });
+
+  return res.data;
+};
 
 // ------------------ UPDATE ------------------
 

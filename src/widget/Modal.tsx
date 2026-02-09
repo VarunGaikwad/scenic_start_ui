@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 type ModalProps = {
   isOpen: boolean;
@@ -16,28 +17,27 @@ export default function Modal({
   children,
   size = "md",
 }: ModalProps) {
-  // Handle escape key
+  // 1. Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
+      if (e.key === "Escape") onClose();
     };
 
-    document.addEventListener("keydown", handleEscape);
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscape);
+    }
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
-  // Prevent body scroll when modal is open
+  // 2. Prevent body scroll
   useEffect(() => {
     if (isOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
       document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
     }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -49,30 +49,32 @@ export default function Modal({
     xl: "max-w-xl",
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+  // 3. Using a Portal to avoid Z-Index fighting
+  return createPortal(
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+      {/* Backdrop with fade-in animation potential */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-md"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Modal */}
+      {/* Modal Container */}
       <div
-        className={`relative z-10 w-full ${sizeClasses[size]} rounded-lg bg-black/50 p-6 shadow-xl`}
+        className={`relative z-10 w-full ${sizeClasses[size]} rounded-xl bg-zinc-900 border border-white/10 p-6 shadow-2xl transition-all scale-100`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
+        onClick={(e) => e.stopPropagation()} // Prevents closing when clicking inside
       >
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <h3 id="modal-title" className="text-lg font-semibold">
+        <div className="flex items-center justify-between mb-6">
+          <h3 id="modal-title" className="text-xl font-medium text-white">
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 cursor-pointer hover:bg-white hover:text-black transition-colors duration-500 ease-in-out"
+            className="rounded-full p-2 text-zinc-400 hover:bg-white/10 hover:text-white transition-all"
             aria-label="Close modal"
           >
             <X className="h-5 w-5" />
@@ -80,8 +82,9 @@ export default function Modal({
         </div>
 
         {/* Content */}
-        <div className="">{children}</div>
+        <div className="text-zinc-300">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
