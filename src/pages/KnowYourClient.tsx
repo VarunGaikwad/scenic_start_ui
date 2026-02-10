@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react";
 import { checkEmailExists, loginUser, registerUser } from "@/api";
 import { setDataToLocalStorage } from "@/utils";
+import { STORAGE_KEYS } from "@/constants";
 
 type Values = {
   name: string;
@@ -10,7 +11,7 @@ type Values = {
   confirmPassword: string;
 };
 
-const TOKEN = "app:authToken:v1";
+const TOKEN = STORAGE_KEYS.AUTH_TOKEN;
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 

@@ -12,31 +12,56 @@ import {
   FolderCard,
   HoneyCombFavIcon,
 } from "@/widget";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+
+const STORAGE_KEYS = {
+  TREE: "app:bookmarkTree:v1",
+  ACTIVE_ID: "app:activeTreeId:v1",
+} as const;
+
+const HEX_SIZE = 120;
+const HEX_HORIZONTAL_OVERLAP = 8;
+const HEX_VERTICAL_OVERLAP = 30;
 
 export default function Bookmarks() {
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const [tree, setTree] = useState<BookmarkTreeType[]>(() => {
-    return (getDataFromLocalStorage("tree") as BookmarkTreeType[] | null) || [];
+    try {
+      const cached = getDataFromLocalStorage(STORAGE_KEYS.TREE);
+      if (Array.isArray(cached)) {
+        return cached;
+      }
+    } catch (error) {
+      console.warn("Failed to load cached tree:", error);
+    }
+    return [];
   });
 
   const [activeTreeId, setActiveTreeId] = useState<string | null>(() => {
-    const activeId = getDataFromLocalStorage("app:activeTreeId:v1") as
-      | string
-      | null;
-    return activeId || tree[0]?._id || null;
+    try {
+      const cached = getDataFromLocalStorage(STORAGE_KEYS.ACTIVE_ID);
+      if (typeof cached === "string") {
+        return cached;
+      }
+    } catch (error) {
+      console.warn("Failed to load active tree ID:", error);
+    }
+    return null;
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [itemsPerRow, setItemsPerRow] = useState(8);
 
+  // Calculate items per row based on container width
   useEffect(() => {
     const updateItemsPerRow = () => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.offsetWidth;
-        const hexWidth = 112; // Adjusted for rounded corners
+        const hexWidth = HEX_SIZE - HEX_HORIZONTAL_OVERLAP;
         const calculated = Math.floor(containerWidth / hexWidth);
-        setItemsPerRow(Math.max(3, calculated)); // Minimum 3 items
+        setItemsPerRow(Math.max(3, calculated));
       }
     };
 
@@ -45,91 +70,165 @@ export default function Bookmarks() {
     return () => window.removeEventListener("resize", updateItemsPerRow);
   }, []);
 
+  // Sync activeTreeId to localStorage
   useEffect(() => {
-    setDataToLocalStorage("app:activeTreeId:v1", activeTreeId);
+    if (activeTreeId) {
+      setDataToLocalStorage(STORAGE_KEYS.ACTIVE_ID, activeTreeId);
+    }
   }, [activeTreeId]);
+
+  // Set default activeTreeId if none exists
+  useEffect(() => {
+    if (!activeTreeId && tree.length > 0) {
+      setActiveTreeId(tree[0]._id);
+    }
+  }, [activeTreeId, tree]);
 
   // Fetch bookmark tree from API on mount
   useEffect(() => {
+    let cancelled = false;
+
     (async function () {
-      const { data } = await getBookmarkTree();
-      setTree(data);
-      setActiveTreeId((prev) => prev || data[0]?._id || null);
+      setIsLoading(true);
+      try {
+        const data = await getBookmarkTree();
+        if (!cancelled) {
+          setTree(data);
+          setDataToLocalStorage(STORAGE_KEYS.TREE, data);
+
+          // Preserve active ID if it still exists, otherwise use first
+          setActiveTreeId((prev) => {
+            if (prev && data.some((item) => item._id === prev)) {
+              return prev;
+            }
+            return data[0]?._id || null;
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch bookmark tree:", error);
+        // Keep cached data on error
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  useEffect(() => {
-    setDataToLocalStorage("tree", tree);
-  }, [tree]);
+  const onDelete = useCallback(
+    (id?: string, title?: string, type = "folder", parentId?: string) => {
+      if (!id) return;
 
-  const onDelete = (
-    id?: string,
-    title?: string,
-    type = "folder",
-    parentId?: string,
-  ) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete " + title + "?",
-    );
-    if (!confirmDelete) return;
+      const confirmDelete = window.confirm(
+        `Are you sure you want to delete "${title}"?`,
+      );
+      if (!confirmDelete) return;
 
-    deleteBookmark(id!).then(() => {
-      if (type === "folder" && !parentId) {
-        setTree((prev) => {
-          const newArray = prev.filter(({ _id }) => _id !== id);
-          if (activeTreeId === id) {
-            setActiveTreeId(newArray[0]?._id || null);
+      deleteBookmark(id)
+        .then(() => {
+          if (type === "folder" && !parentId) {
+            // Deleting a top-level folder
+            setTree((prev) => {
+              const newArray = prev.filter((folder) => folder._id !== id);
+
+              // Update cache
+              setDataToLocalStorage(STORAGE_KEYS.TREE, newArray);
+
+              // Update active ID if deleted folder was active
+              if (activeTreeId === id) {
+                setActiveTreeId(newArray[0]?._id || null);
+              }
+
+              return newArray;
+            });
+          } else {
+            // Deleting a bookmark inside a folder
+            setTree((prev) => {
+              const newTree = prev.map((folder) => {
+                if (folder._id === parentId) {
+                  return {
+                    ...folder,
+                    children: folder.children.filter(
+                      (child) => child._id !== id,
+                    ),
+                  };
+                }
+                return folder;
+              });
+
+              // Update cache
+              setDataToLocalStorage(STORAGE_KEYS.TREE, newTree);
+
+              return newTree;
+            });
           }
-          return newArray;
+        })
+        .catch((error) => {
+          console.error("Failed to delete bookmark:", error);
+          alert("Failed to delete. Please try again.");
         });
-      } else {
-        setTree((prev) => {
-          return prev.map((folder) => {
-            if (folder._id === parentId) {
-              folder.children = folder.children.filter(({ _id }) => _id !== id);
-            }
-            return folder;
-          });
-        });
-      }
-    });
-  };
+    },
+    [activeTreeId],
+  );
 
-  const { children } = tree.find(({ _id }) => _id === activeTreeId) || {
-    children: [],
-  };
+  const onSuccess = useCallback(
+    (item: BookmarkTreeType) => {
+      setTree((prev) => {
+        const newTree = prev.map((folder) =>
+          folder._id === activeTreeId
+            ? { ...folder, children: [...folder.children, item] }
+            : folder,
+        );
 
-  const onSuccess = (item: BookmarkTreeType) => {
-    setTree((prev) =>
-      prev.map((folder) =>
-        folder._id === activeTreeId
-          ? { ...folder, children: [...folder.children, item] }
-          : folder,
-      ),
-    );
-  };
+        setDataToLocalStorage(STORAGE_KEYS.TREE, newTree);
+        return newTree;
+      });
+    },
+    [activeTreeId],
+  );
 
-  const getHexPosition = (index: number) => {
-    const row = Math.floor(index / itemsPerRow);
-    const col = index % itemsPerRow;
-    const isOddRow = row % 2 === 1;
+  const getHexPosition = useCallback(
+    (index: number) => {
+      const row = Math.floor(index / itemsPerRow);
+      const col = index % itemsPerRow;
+      const isOddRow = row % 2 === 1;
 
-    const hexWidth = 112; // Adjusted: 120 - 8 (horizontal overlap)
-    const hexHeight = 90; // Adjusted: 120 - 30 (vertical overlap)
+      const hexWidth = HEX_SIZE - HEX_HORIZONTAL_OVERLAP;
+      const hexHeight = HEX_SIZE - HEX_VERTICAL_OVERLAP;
 
-    const left = col * hexWidth + (isOddRow ? 56 : 0); // Half of hexWidth for offset
-    const top = row * hexHeight;
+      const left = col * hexWidth + (isOddRow ? hexWidth / 2 : 0);
+      const top = row * hexHeight;
 
-    return { left, top };
-  };
+      return { left, top };
+    },
+    [itemsPerRow],
+  );
+
+  const activeFolder = tree.find((folder) => folder._id === activeTreeId);
+  const children = activeFolder?.children || [];
 
   const totalItems = children.length + 1;
   const totalRows = Math.ceil(totalItems / itemsPerRow);
-  const containerHeight = totalRows * 90 + 30;
+  const containerHeight =
+    totalRows * (HEX_SIZE - HEX_VERTICAL_OVERLAP) + HEX_VERTICAL_OVERLAP;
+
+  const addButtonPosition = getHexPosition(children.length);
 
   return (
-    <div className="flex-1 px-5 py-3">
-      <div className="flex gap-4">
+    <div className="flex-1 px-5 py-3 relative">
+      {/* Loading indicator */}
+      {isLoading && (
+        <div className="absolute top-4 right-4 z-10">
+          <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+        </div>
+      )}
+
+      {/* Folder tabs */}
+      <div className="flex gap-4 overflow-x-auto pb-2">
         {tree.map(({ title, type, _id }) => (
           <FolderCard
             key={_id}
@@ -140,15 +239,26 @@ export default function Bookmarks() {
               setActiveTreeId(_id);
             }}
             onDelete={() => onDelete(_id, title, type)}
-            onRename={(newName) =>
-              putBookmark(_id!, { title: newName }).then(() => {
-                setTree((prev) =>
-                  prev.map((folder) =>
-                    folder._id === _id ? { ...folder, title: newName } : folder,
-                  ),
-                );
-              })
-            }
+            onRename={(newName) => {
+              if (!_id) return;
+
+              putBookmark(_id, { title: newName })
+                .then(() => {
+                  setTree((prev) => {
+                    const newTree = prev.map((folder) =>
+                      folder._id === _id
+                        ? { ...folder, title: newName }
+                        : folder,
+                    );
+                    setDataToLocalStorage(STORAGE_KEYS.TREE, newTree);
+                    return newTree;
+                  });
+                })
+                .catch((error) => {
+                  console.error("Failed to rename folder:", error);
+                  alert("Failed to rename. Please try again.");
+                });
+            }}
           />
         ))}
 
@@ -161,11 +271,22 @@ export default function Bookmarks() {
                 setIsAddingNew(false);
                 return;
               }
-              postBookmarkFolder(newName).then(({ data }) => {
-                setTree((prev) => [...prev, data]);
-                setActiveTreeId(data._id);
-                setIsAddingNew(false);
-              });
+
+              postBookmarkFolder(newName)
+                .then((data) => {
+                  setTree((prev) => {
+                    const newTree = [...prev, data];
+                    setDataToLocalStorage(STORAGE_KEYS.TREE, newTree);
+                    return newTree;
+                  });
+                  setActiveTreeId(data._id);
+                  setIsAddingNew(false);
+                })
+                .catch((error) => {
+                  console.error("Failed to create folder:", error);
+                  alert("Failed to create folder. Please try again.");
+                  setIsAddingNew(false);
+                });
             }}
             onClick={() => {}}
           />
@@ -186,7 +307,7 @@ export default function Bookmarks() {
             const { left, top } = getHexPosition(index);
             return (
               <div
-                key={index}
+                key={bookmark._id || index}
                 style={{
                   position: "absolute",
                   left: `${left}px`,
@@ -196,30 +317,25 @@ export default function Bookmarks() {
                 <HoneyCombFavIcon
                   {...bookmark}
                   onDelete={onDelete}
-                  size={120}
+                  size={HEX_SIZE}
                 />
               </div>
             );
           })}
 
-          {(() => {
-            const { left, top } = getHexPosition(children.length);
-            return (
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${left}px`,
-                  top: `${top}px`,
-                }}
-              >
-                <AddMoreHexagon
-                  size={120}
-                  activeTreeId={activeTreeId || ""}
-                  onSuccess={onSuccess}
-                />
-              </div>
-            );
-          })()}
+          <div
+            style={{
+              position: "absolute",
+              left: `${addButtonPosition.left}px`,
+              top: `${addButtonPosition.top}px`,
+            }}
+          >
+            <AddMoreHexagon
+              size={HEX_SIZE}
+              activeTreeId={activeTreeId || ""}
+              onSuccess={onSuccess}
+            />
+          </div>
         </div>
       </div>
     </div>
