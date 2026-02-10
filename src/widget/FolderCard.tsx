@@ -35,13 +35,11 @@ export default function FolderCard({
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       if (editable && onEnterPress) {
-        // New folder creation
         onEnterPress(value);
       } else if (_id) {
         try {
-          // Call API to update title
           await putBookmark(_id, { title: value });
-          onRename?.(value); // update parent state
+          onRename?.(value);
         } catch (err) {
           console.error("Rename failed", err);
           setValue(title || ""); // revert if API fails
@@ -75,19 +73,10 @@ export default function FolderCard({
           onBlur={() => {
             setIsEditing(false);
             if (editable && !value.trim()) {
-              onEnterPress?.(""); // notify parent that it's empty
+              onEnterPress?.("");
             }
           }}
-          className="
-      absolute inset-0
-      w-full h-full
-      px-4
-      text-center
-      rounded-2xl
-      bg-transparent
-      border-none
-      focus:outline-none
-    "
+          className="absolute inset-0 w-full h-full px-4 text-center rounded-2xl bg-transparent border-none focus:outline-none"
         />
       ) : (
         <span>{value || "Folder Name"}</span>

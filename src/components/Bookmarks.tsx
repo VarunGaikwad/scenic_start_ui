@@ -1,4 +1,9 @@
-import { deleteBookmark, getBookmarkTree, postBookmarkFolder } from "@/api";
+import {
+  deleteBookmark,
+  getBookmarkTree,
+  postBookmarkFolder,
+  putBookmark,
+} from "@/api";
 import type { BookmarkTreeType } from "@/interface";
 import { getDataFromLocalStorage, setDataToLocalStorage } from "@/utils";
 import {
@@ -16,16 +21,15 @@ export default function Bookmarks() {
   });
 
   const [activeTreeId, setActiveTreeId] = useState<string | null>(() => {
-    const localTree = getDataFromLocalStorage("tree") as
-      | BookmarkTreeType[]
+    const activeId = getDataFromLocalStorage("app:activeTreeId:v1") as
+      | string
       | null;
-    return localTree && localTree.length > 0 ? localTree[0]._id : null;
+    return activeId || tree[0]?._id || null;
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [itemsPerRow, setItemsPerRow] = useState(8);
 
-  // Calculate items per row based on container width
   useEffect(() => {
     const updateItemsPerRow = () => {
       if (containerRef.current) {
@@ -41,6 +45,10 @@ export default function Bookmarks() {
     return () => window.removeEventListener("resize", updateItemsPerRow);
   }, []);
 
+  useEffect(() => {
+    setDataToLocalStorage("app:activeTreeId:v1", activeTreeId);
+  }, [activeTreeId]);
+
   // Fetch bookmark tree from API on mount
   useEffect(() => {
     (async function () {
@@ -54,21 +62,36 @@ export default function Bookmarks() {
     setDataToLocalStorage("tree", tree);
   }, [tree]);
 
-  // Delete folder
-  const onDelete = (id?: string) => {
+  const onDelete = (
+    id?: string,
+    title?: string,
+    type = "folder",
+    parentId?: string,
+  ) => {
     const confirmDelete = window.confirm(
-      "Are you sure you want to delete this folder?",
+      "Are you sure you want to delete " + title + "?",
     );
     if (!confirmDelete) return;
 
     deleteBookmark(id!).then(() => {
-      setTree((prev) => {
-        const newArray = prev.filter(({ _id }) => _id !== id);
-        if (activeTreeId === id) {
-          setActiveTreeId(newArray[0]?._id || null);
-        }
-        return newArray;
-      });
+      if (type === "folder" && !parentId) {
+        setTree((prev) => {
+          const newArray = prev.filter(({ _id }) => _id !== id);
+          if (activeTreeId === id) {
+            setActiveTreeId(newArray[0]?._id || null);
+          }
+          return newArray;
+        });
+      } else {
+        setTree((prev) => {
+          return prev.map((folder) => {
+            if (folder._id === parentId) {
+              folder.children = folder.children.filter(({ _id }) => _id !== id);
+            }
+            return folder;
+          });
+        });
+      }
     });
   };
 
@@ -107,17 +130,24 @@ export default function Bookmarks() {
   return (
     <div className="flex-1 px-5 py-3">
       <div className="flex gap-4">
-        {tree.map(({ title, _id }) => (
+        {tree.map(({ title, type, _id }) => (
           <FolderCard
             key={_id}
+            _id={_id}
             title={title}
             isActive={_id === activeTreeId}
-            onClick={() => setActiveTreeId(_id)}
-            onDelete={() => onDelete(_id)}
+            onClick={() => {
+              setActiveTreeId(_id);
+            }}
+            onDelete={() => onDelete(_id, title, type)}
             onRename={(newName) =>
-              setTree((prev) =>
-                prev.map((f) => (f._id === _id ? { ...f, title: newName } : f)),
-              )
+              putBookmark(_id!, { title: newName }).then(() => {
+                setTree((prev) =>
+                  prev.map((folder) =>
+                    folder._id === _id ? { ...folder, title: newName } : folder,
+                  ),
+                );
+              })
             }
           />
         ))}
@@ -154,7 +184,6 @@ export default function Bookmarks() {
         >
           {children.map((bookmark, index) => {
             const { left, top } = getHexPosition(index);
-            console.log(bookmark);
             return (
               <div
                 key={index}
@@ -164,7 +193,11 @@ export default function Bookmarks() {
                   top: `${top}px`,
                 }}
               >
-                <HoneyCombFavIcon {...bookmark} size={120} />
+                <HoneyCombFavIcon
+                  {...bookmark}
+                  onDelete={onDelete}
+                  size={120}
+                />
               </div>
             );
           })}

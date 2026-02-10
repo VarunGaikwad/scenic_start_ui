@@ -94,6 +94,7 @@ export default function AddLinkModal({
         <div>
           <label className="block text-sm mb-1 text-zinc-400">Title</label>
           <input
+            autoFocus
             placeholder="Q1 Marketing Dashboard"
             value={title}
             onChange={(e) => setTitle(e.target.value)}

@@ -40,11 +40,6 @@ export const postBookmarkFolder = (title: string, parentId?: string | null) =>
     children: [],
   });
 
-export type Bookmark = {
-  id: string;
-  title: string;
-  url: string;
-};
 export const postBookmarkLink = async (
   title: string,
   url: string,
