@@ -3,8 +3,7 @@ import { ScenicApp, KnowYourClient } from "@/pages";
 import { isMe } from "@/api";
 import { Background } from "./components";
 import { deleteDataFromLocalStorage, getDataFromLocalStorage } from "./utils";
-
-import { STORAGE_KEYS } from "@/constants";
+import { STORAGE_KEYS } from "./constants";
 
 export default function ProtectedApp() {
   const [loading, setLoading] = useState(true);

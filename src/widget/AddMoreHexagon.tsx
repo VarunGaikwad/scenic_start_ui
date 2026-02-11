@@ -3,6 +3,12 @@ import LinkModal from "./LinkModal";
 import type { BookmarkTreeType } from "@/interface";
 import { HEXAGON_DIMENSIONS, SVG_PATHS } from "@/constants";
 
+interface AddMoreHexagonProps {
+  size?: number;
+  activeTreeId: string;
+  onSuccess: (bookmark: BookmarkTreeType) => void;
+}
+
 export default function AddMoreHexagon({
   size = HEXAGON_DIMENSIONS.size,
   activeTreeId,
@@ -14,6 +20,25 @@ export default function AddMoreHexagon({
 }) {
   // const hexPoints = "60,10 105,35 105,85 60,110 15,85 15,35";
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Clamp size to reasonable range
+  const validSize = Math.max(40, Math.min(400, size));
+
+  const hexPoints = "60,10 105,35 105,85 60,110 15,85 15,35";
+
+  const handleSuccess = async (bookmark: BookmarkTreeType) => {
+    setIsSaving(true);
+    try {
+      await onSuccess(bookmark);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Failed to add bookmark:", error);
+      // Error is handled in parent, keep modal open
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <button
@@ -76,9 +101,62 @@ export default function AddMoreHexagon({
           letterSpacing="0.02em"
           className="uppercase tracking-tight"
         >
-          Add More
-        </text>
-      </svg>
-    </button>
+          {/* Glass hexagon background */}
+          <polygon
+            points={hexPoints}
+            fill="rgba(0,0,0,0.35)"
+            stroke="rgba(255,255,255,0.06)"
+            strokeWidth={1}
+          />
+
+          {/* Plus icon */}
+          <g aria-hidden="true">
+            <line
+              x1="60"
+              y1="40"
+              x2="60"
+              y2="65"
+              stroke="rgba(255,255,255,0.7)"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+            />
+            <line
+              x1="47.5"
+              y1="52.5"
+              x2="72.5"
+              y2="52.5"
+              stroke="rgba(255,255,255,0.7)"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+            />
+          </g>
+
+          {/* Label */}
+          <text
+            x="60"
+            y="85"
+            textAnchor="middle"
+            fontSize="10"
+            fontWeight="500"
+            fill="rgba(255,255,255,0.7)"
+            letterSpacing="0.02em"
+            className="uppercase tracking-tight select-none"
+            aria-hidden="true"
+          >
+            Add More
+          </text>
+        </svg>
+      </button>
+
+      {/* Modal rendered as sibling, not child of button */}
+      {isModalOpen && (
+        <AddLinkModal
+          onSuccess={handleSuccess}
+          isModalOpen={isModalOpen}
+          setIsModalOpen={setIsModalOpen}
+          activeTreeId={activeTreeId}
+        />
+      )}
+    </>
   );
 }
