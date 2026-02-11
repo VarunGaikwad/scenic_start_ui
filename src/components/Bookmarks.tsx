@@ -1,6 +1,5 @@
 import {
   deleteBookmark,
-  getBookmarks,
   getBookmarkTree,
   postBookmarkFolder,
   putBookmark,
