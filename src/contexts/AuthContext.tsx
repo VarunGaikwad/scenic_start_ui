@@ -4,18 +4,20 @@ import {
   useState,
   useEffect,
   useCallback,
-  type ReactNode,
 } from "react";
 import { isMe } from "@/api";
 import { deleteDataFromLocalStorage } from "@/utils";
+import { STORAGE_KEYS } from "@/constants";
 import type { AuthContextType } from "@/interface";
 
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined,
+);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState(() => {
-    return !!localStorage.getItem("authToken");
+  const [authenticated, setAuthenticated] = useState<boolean>(() => {
+    return !!localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -30,23 +32,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthenticated(status === 200);
 
       if (status === 401) {
-        deleteDataFromLocalStorage("authToken");
+        deleteDataFromLocalStorage(STORAGE_KEYS.AUTH_TOKEN);
       }
     } catch (error: any) {
       if (signal?.aborted) return;
 
       if (error.response?.status === 401) {
-        deleteDataFromLocalStorage("authToken");
+        deleteDataFromLocalStorage(STORAGE_KEYS.AUTH_TOKEN);
         setAuthenticated(false);
       } else if (!navigator.onLine) {
         setError("You're offline. Some features may be limited.");
         // Keep user logged in if they have a token
-        const hasToken = !!localStorage.getItem("authToken");
+        const hasToken = !!localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
         setAuthenticated(hasToken);
       } else {
         setError("Unable to verify authentication");
         // Keep user logged in if they have a token
-        const hasToken = !!localStorage.getItem("authToken");
+        const hasToken = !!localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
         setAuthenticated(hasToken);
       }
     } finally {
@@ -57,12 +59,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    deleteDataFromLocalStorage("authToken");
-    deleteDataFromLocalStorage("refreshToken");
-    deleteDataFromLocalStorage("name");
-    deleteDataFromLocalStorage("email");
-    deleteDataFromLocalStorage("coords");
-    deleteDataFromLocalStorage("weatherInfo");
+    deleteDataFromLocalStorage(STORAGE_KEYS.AUTH_TOKEN);
+    // Refresh token not used in current implementation but good to clear if added
+    // deleteDataFromLocalStorage(STORAGE_KEYS.REFRESH_TOKEN);
+    deleteDataFromLocalStorage(STORAGE_KEYS.USER_NAME);
+    deleteDataFromLocalStorage(STORAGE_KEYS.USER_EMAIL);
+    deleteDataFromLocalStorage(STORAGE_KEYS.COORDS);
+    deleteDataFromLocalStorage(STORAGE_KEYS.WEATHER_INFO);
 
     setAuthenticated(false);
     setError(null);

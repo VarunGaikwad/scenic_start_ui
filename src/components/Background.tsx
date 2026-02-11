@@ -47,7 +47,7 @@ const FALLBACK_BACKGROUND: ImageResponseType = {
 export default function Background({
   children,
 }: {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }) {
   const [imageObject, setImageObject] = useState<ImageResponseType | null>(
     null,

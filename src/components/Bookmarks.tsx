@@ -11,17 +11,25 @@ import {
   AddMoreHexagon,
   FolderCard,
   HoneyCombFavIcon,
+  LinkModal,
 } from "@/widget";
+import { HEXAGON_DIMENSIONS, STORAGE_KEYS } from "@/constants";
 import { useEffect, useState, useRef } from "react";
 
 export default function Bookmarks() {
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [editingBookmark, setEditingBookmark] =
+    useState<BookmarkTreeType | null>(null);
   const [tree, setTree] = useState<BookmarkTreeType[]>(() => {
-    return (getDataFromLocalStorage("tree") as BookmarkTreeType[] | null) || [];
+    return (
+      (getDataFromLocalStorage(STORAGE_KEYS.BOOKMARK_TREE) as
+        | BookmarkTreeType[]
+        | null) || []
+    );
   });
 
   const [activeTreeId, setActiveTreeId] = useState<string | null>(() => {
-    const activeId = getDataFromLocalStorage("app:activeTreeId:v1") as
+    const activeId = getDataFromLocalStorage(STORAGE_KEYS.ACTIVE_TREE_ID) as
       | string
       | null;
     return activeId || tree[0]?._id || null;
@@ -29,14 +37,20 @@ export default function Bookmarks() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [itemsPerRow, setItemsPerRow] = useState(8);
+  const [gridOffset, setGridOffset] = useState(0);
 
   useEffect(() => {
     const updateItemsPerRow = () => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.offsetWidth;
-        const hexWidth = 112; // Adjusted for rounded corners
+        const hexWidth = HEXAGON_DIMENSIONS.width;
+
         const calculated = Math.floor(containerWidth / hexWidth);
-        setItemsPerRow(Math.max(3, calculated)); // Minimum 3 items
+        const count = Math.max(3, calculated);
+        setItemsPerRow(count);
+
+        const extraSpace = Math.max(0, containerWidth - count * hexWidth);
+        setGridOffset(extraSpace / 2);
       }
     };
 
@@ -46,7 +60,7 @@ export default function Bookmarks() {
   }, []);
 
   useEffect(() => {
-    setDataToLocalStorage("app:activeTreeId:v1", activeTreeId);
+    setDataToLocalStorage(STORAGE_KEYS.ACTIVE_TREE_ID, activeTreeId);
   }, [activeTreeId]);
 
   // Fetch bookmark tree from API on mount
@@ -59,7 +73,7 @@ export default function Bookmarks() {
   }, []);
 
   useEffect(() => {
-    setDataToLocalStorage("tree", tree);
+    setDataToLocalStorage(STORAGE_KEYS.BOOKMARK_TREE, tree);
   }, [tree]);
 
   const onDelete = (
@@ -109,15 +123,46 @@ export default function Bookmarks() {
     );
   };
 
+  const onMoveBookmark = (bookmarkId: string, targetFolderId: string) => {
+    // 1. Find the bookmark and its current parent
+    let bookmarkToMove: BookmarkTreeType | undefined;
+
+    // Create a deep copy to modify
+    const newTree = JSON.parse(JSON.stringify(tree)) as BookmarkTreeType[];
+
+    // Remove from old location
+    newTree.forEach((folder) => {
+      const index = folder.children.findIndex((c) => c._id === bookmarkId);
+      if (index !== -1) {
+        bookmarkToMove = folder.children[index];
+        folder.children.splice(index, 1);
+      }
+    });
+
+    if (!bookmarkToMove) return;
+
+    // Add to new location
+    const targetFolder = newTree.find((f) => f._id === targetFolderId);
+    if (targetFolder) {
+      // Update parentId of the bookmark object in memory
+      bookmarkToMove.parentId = targetFolderId;
+      targetFolder.children.push(bookmarkToMove);
+      setTree(newTree);
+
+      // Persist change
+      putBookmark(bookmarkId, { parentId: targetFolderId });
+    }
+  };
+
   const getHexPosition = (index: number) => {
     const row = Math.floor(index / itemsPerRow);
     const col = index % itemsPerRow;
     const isOddRow = row % 2 === 1;
 
-    const hexWidth = 112; // Adjusted: 120 - 8 (horizontal overlap)
-    const hexHeight = 90; // Adjusted: 120 - 30 (vertical overlap)
+    const hexWidth = HEXAGON_DIMENSIONS.width;
+    const hexHeight = HEXAGON_DIMENSIONS.height;
 
-    const left = col * hexWidth + (isOddRow ? 56 : 0); // Half of hexWidth for offset
+    const left = col * hexWidth + (isOddRow ? 56 : 0) + gridOffset;
     const top = row * hexHeight;
 
     return { left, top };
@@ -128,8 +173,8 @@ export default function Bookmarks() {
   const containerHeight = totalRows * 90 + 30;
 
   return (
-    <div className="flex-1 px-5 py-3">
-      <div className="flex gap-4">
+    <div className="flex-1 px-5 py-3 w-full">
+      <div className="flex gap-4 justify-center flex-wrap">
         {tree.map(({ title, type, _id }) => (
           <FolderCard
             key={_id}
@@ -149,6 +194,7 @@ export default function Bookmarks() {
                 );
               })
             }
+            onDrop={({ id }) => onMoveBookmark(id, _id)}
           />
         ))}
 
@@ -175,8 +221,9 @@ export default function Bookmarks() {
       </div>
 
       {/* Honeycomb Grid */}
-      <div className="mt-8" ref={containerRef}>
+      <div className="mt-8 mx-auto" ref={containerRef}>
         <div
+          key={activeTreeId} // Force re-render on folder change to trigger animations
           style={{
             position: "relative",
             height: `${containerHeight}px`,
@@ -186,17 +233,22 @@ export default function Bookmarks() {
             const { left, top } = getHexPosition(index);
             return (
               <div
-                key={index}
+                key={`${activeTreeId}-${index}`}
+                className="animate-fade-up opacity-0 fill-mode-forwards"
                 style={{
                   position: "absolute",
                   left: `${left}px`,
                   top: `${top}px`,
+                  transition: "all 0.5s ease-out",
+                  animationDelay: `${index * 30}ms`,
+                  animationFillMode: "forwards",
                 }}
               >
                 <HoneyCombFavIcon
                   {...bookmark}
                   onDelete={onDelete}
-                  size={120}
+                  size={HEXAGON_DIMENSIONS.size}
+                  onEdit={(item) => setEditingBookmark(item)}
                 />
               </div>
             );
@@ -210,10 +262,11 @@ export default function Bookmarks() {
                   position: "absolute",
                   left: `${left}px`,
                   top: `${top}px`,
+                  transition: "all 0.5s ease-out",
                 }}
               >
                 <AddMoreHexagon
-                  size={120}
+                  size={HEXAGON_DIMENSIONS.size}
                   activeTreeId={activeTreeId || ""}
                   onSuccess={onSuccess}
                 />
@@ -221,6 +274,39 @@ export default function Bookmarks() {
             );
           })()}
         </div>
+        {editingBookmark && (
+          <LinkModal
+            isModalOpen={!!editingBookmark}
+            setIsModalOpen={(open) => {
+              if (!open) setEditingBookmark(null);
+            }}
+            activeTreeId={activeTreeId || ""}
+            isEditMode={true}
+            initialTitle={editingBookmark.title}
+            initialUrl={editingBookmark.url}
+            bookmarkId={editingBookmark._id}
+            onSuccess={(updatedItem) => {
+              setTree((prev) =>
+                prev.map((folder) => {
+                  // Check if the bookmark is in this folder
+                  const index = folder.children.findIndex(
+                    (c) => c._id === updatedItem._id,
+                  );
+                  if (index !== -1) {
+                    const newChildren = [...folder.children];
+                    newChildren[index] = {
+                      ...newChildren[index],
+                      ...updatedItem,
+                    };
+                    return { ...folder, children: newChildren };
+                  }
+                  return folder;
+                }),
+              );
+              setEditingBookmark(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );

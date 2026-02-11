@@ -11,6 +11,7 @@ export default function FolderCard({
   editable = false,
   onRename,
   onEnterPress,
+  onDrop,
 }: {
   _id?: string;
   title?: string;
@@ -20,9 +21,11 @@ export default function FolderCard({
   editable?: boolean;
   onRename?: (newName: string) => void;
   onEnterPress?: (newName: string) => void;
+  onDrop?: (item: { id: string; type: string }) => void;
 }) {
   const [isEditing, setIsEditing] = useState(editable);
   const [value, setValue] = useState(title || "");
+  const [isDragOver, setIsDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -52,6 +55,17 @@ export default function FolderCard({
     }
   };
 
+  const baseClasses =
+    "group relative flex items-center justify-center px-6 py-2.5 rounded-full transition-all duration-300 ease-out select-none cursor-pointer border";
+
+  const activeClasses = isActive
+    ? "bg-white/20 border-white/40 shadow-[0_0_15px_rgba(255,255,255,0.2)] text-white scale-105"
+    : "bg-black/30 border-white/10 text-white/70 hover:bg-black/50 hover:border-white/30 hover:text-white hover:scale-105 hover:shadow-lg";
+
+  const dragClasses = isDragOver
+    ? "ring-2 ring-white/50 scale-110 bg-white/20"
+    : "";
+
   return (
     <div
       onClick={() => {
@@ -60,9 +74,20 @@ export default function FolderCard({
       onDoubleClick={() => {
         if (!editable) setIsEditing(true);
       }}
-      className={`bookmark-btn-common group relative flex items-center justify-center ${
-        isActive ? "before:border-solid" : ""
-      }`}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setIsDragOver(true);
+      }}
+      onDragLeave={() => setIsDragOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setIsDragOver(false);
+        const bookmarkId = e.dataTransfer.getData("bookmarkId");
+        if (bookmarkId && onDrop) {
+          onDrop({ id: bookmarkId, type: "bookmark" });
+        }
+      }}
+      className={`${baseClasses} ${activeClasses} ${dragClasses} min-w-[100px]`}
     >
       {isEditing ? (
         <input
@@ -76,10 +101,13 @@ export default function FolderCard({
               onEnterPress?.("");
             }
           }}
-          className="absolute inset-0 w-full h-full px-4 text-center rounded-2xl bg-transparent border-none focus:outline-none"
+          className="w-full bg-transparent text-center text-white outline-none placeholder:text-white/30"
+          placeholder="New Folder"
         />
       ) : (
-        <span>{value || "Folder Name"}</span>
+        <span className="font-medium tracking-wide truncate max-w-[150px]">
+          {value || "Folder"}
+        </span>
       )}
 
       {onDelete && !isEditing && (
@@ -88,9 +116,10 @@ export default function FolderCard({
             e.stopPropagation();
             onDelete();
           }}
-          className="hover:text-red-700 cursor-pointer absolute top-1 right-1 z-10 p-1 opacity-0 pointer-events-none transition group-hover:opacity-100 group-hover:pointer-events-auto"
+          className="absolute -top-1 -right-1 p-1 bg-red-500/80 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600 shadow-sm"
+          title="Delete Folder"
         >
-          <Trash2 size={14} />
+          <Trash2 size={10} />
         </button>
       )}
     </div>

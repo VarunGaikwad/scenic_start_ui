@@ -1,9 +1,10 @@
 import { useState } from "react";
-import AddLinkModal from "./AddLinkModal";
+import LinkModal from "./LinkModal";
 import type { BookmarkTreeType } from "@/interface";
+import { HEXAGON_DIMENSIONS, SVG_PATHS } from "@/constants";
 
 export default function AddMoreHexagon({
-  size = 120,
+  size = HEXAGON_DIMENSIONS.size,
   activeTreeId,
   onSuccess,
 }: {
@@ -11,7 +12,7 @@ export default function AddMoreHexagon({
   onSuccess: (bookmark: BookmarkTreeType) => void;
   activeTreeId: string;
 }) {
-  const hexPoints = "60,10 105,35 105,85 60,110 15,85 15,35";
+  // const hexPoints = "60,10 105,35 105,85 60,110 15,85 15,35";
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -20,7 +21,7 @@ export default function AddMoreHexagon({
       className="inline-flex items-center justify-center transition-opacity duration-200 hover:opacity-90 cursor-pointer"
       style={{ width: size, height: size }}
     >
-      <AddLinkModal
+      <LinkModal
         onSuccess={onSuccess}
         isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
@@ -36,8 +37,9 @@ export default function AddMoreHexagon({
         xmlns="http://www.w3.org/2000/svg"
       >
         {/* Glass hexagon background */}
-        <polygon
-          points={hexPoints}
+        {/* Glass hexagon background with soft corners */}
+        <path
+          d={SVG_PATHS.HEXAGON_SOFT}
           fill="rgba(0,0,0,0.35)"
           stroke="rgba(255,255,255,0.06)"
           strokeWidth={1}

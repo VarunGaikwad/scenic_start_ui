@@ -1,26 +1,45 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Modal from "./Modal";
-import { postBookmarkLink } from "@/api";
+import { postBookmarkLink, putBookmark } from "@/api";
 import type { BookmarkTreeType } from "@/interface";
 
 type Props = {
   isModalOpen: boolean;
   setIsModalOpen: (open: boolean) => void;
-  activeTreeId: string;
+  activeTreeId?: string;
   onSuccess: (bookmark: BookmarkTreeType) => void;
+  // Edit mode props
+  initialTitle?: string;
+  initialUrl?: string;
+  bookmarkId?: string;
+  isEditMode?: boolean;
 };
 
-export default function AddLinkModal({
+export default function LinkModal({
   isModalOpen,
   setIsModalOpen,
   activeTreeId,
   onSuccess,
+  initialTitle = "",
+  initialUrl = "",
+  bookmarkId,
+  isEditMode = false,
 }: Props) {
-  const [title, setTitle] = useState("");
-  const [url, setUrl] = useState("");
+  const [title, setTitle] = useState(initialTitle);
+  const [url, setUrl] = useState(initialUrl);
   const [touched, setTouched] = useState({ title: false, url: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
+
+  // Reset form when modal opens/closes or initial values change
+  useEffect(() => {
+    if (isModalOpen) {
+        setTitle(initialTitle);
+        setUrl(initialUrl);
+        setTouched({ title: false, url: false });
+        setApiError("");
+    }
+  }, [isModalOpen, initialTitle, initialUrl]);
 
   const normalizeUrl = (value: string) =>
     /^https?:\/\//i.test(value) ? value : `https://${value}`;
@@ -62,21 +81,35 @@ export default function AddLinkModal({
     try {
       const normalizedUrl = normalizeUrl(url.trim());
 
-      const createdBookmark = await postBookmarkLink(
-        title.trim(),
-        normalizedUrl,
-        activeTreeId,
-      );
+      let result: BookmarkTreeType;
 
-      onSuccess(createdBookmark);
+      if (isEditMode && bookmarkId) {
+         await putBookmark(bookmarkId, {
+             title: title.trim(),
+             url: normalizedUrl,
+         });
+         // Mock the object to return for immediate UI update
+         result = {
+             _id: bookmarkId,
+             title: title.trim(),
+             url: normalizedUrl,
+             type: "link",
+             parentId: activeTreeId || "", 
+             children: []
+         };
+      } else {
+         if (!activeTreeId) throw new Error("Parent ID required for new link");
+         result = await postBookmarkLink(
+            title.trim(),
+            normalizedUrl,
+            activeTreeId,
+         );
+      }
 
-      // reset + close
-      setTitle("");
-      setUrl("");
-      setTouched({ title: false, url: false });
+      onSuccess(result);
       setIsModalOpen(false);
     } catch {
-      setApiError("Failed to add link. Try again.");
+      setApiError(`Failed to ${isEditMode ? "update" : "add"} link. Try again.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -86,7 +119,7 @@ export default function AddLinkModal({
     <Modal
       isOpen={isModalOpen}
       onClose={() => setIsModalOpen(false)}
-      title="Add new link"
+      title={isEditMode ? "Edit link" : "Add new link"}
       size="sm"
     >
       <form onSubmit={handleSubmit} className="space-y-6" noValidate>
@@ -146,7 +179,7 @@ export default function AddLinkModal({
             hover:bg-blue-500
             disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? "Adding…" : "Add link"}
+          {isSubmitting ? (isEditMode ? "Saving..." : "Adding…") : (isEditMode ? "Save changes" : "Add link")}
         </button>
       </form>
     </Modal>

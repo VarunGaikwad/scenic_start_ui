@@ -10,7 +10,7 @@ type Values = {
   confirmPassword: string;
 };
 
-const TOKEN = "app:authToken:v1";
+import { STORAGE_KEYS } from "@/constants";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -129,13 +129,13 @@ export default function KnowYourClient() {
     try {
       if (emailExists) {
         const { data } = await loginUser(values.email, values.password);
-        setDataToLocalStorage(TOKEN, data.token);
-        setDataToLocalStorage("loginTimestamp", Date.now());
+        setDataToLocalStorage(STORAGE_KEYS.AUTH_TOKEN, data.token);
+        setDataToLocalStorage(STORAGE_KEYS.LOGIN_TIMESTAMP, Date.now());
       } else {
         await registerUser(values.name, values.email, values.password);
         const { data } = await loginUser(values.email, values.password);
-        setDataToLocalStorage(TOKEN, data.token);
-        setDataToLocalStorage("loginTimestamp", Date.now());
+        setDataToLocalStorage(STORAGE_KEYS.AUTH_TOKEN, data.token);
+        setDataToLocalStorage(STORAGE_KEYS.LOGIN_TIMESTAMP, Date.now());
       }
 
       // Clear sensitive data
@@ -176,7 +176,7 @@ export default function KnowYourClient() {
       const nameError = validateName(values.name);
       if (nameError) return setError(nameError);
 
-      setDataToLocalStorage("name", values.name.trim());
+      setDataToLocalStorage(STORAGE_KEYS.USER_NAME, values.name.trim());
       setStep(step + 1);
       return;
     }
@@ -193,7 +193,7 @@ export default function KnowYourClient() {
       try {
         const { data } = await checkEmailExists(email);
         setEmailExists(data.exists);
-        setDataToLocalStorage("email", email);
+        setDataToLocalStorage(STORAGE_KEYS.USER_EMAIL, email);
         setStep(step + 1);
       } catch (error: any) {
         if (error.response?.status === 429) {
@@ -245,87 +245,99 @@ export default function KnowYourClient() {
   };
 
   return (
-    <div className="flex justify-center items-end w-screen pb-10">
-      <div className="space-y-4 text-center w-full max-w-2xl px-4">
-        <div className="text-2xl sm:text-3xl font-semibold">
-          {current.text} {current.emoji}
-        </div>
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#0a0a0a] font-inter text-white selection:bg-white/30">
+      {/* Background Gradient / Image Placeholder */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-black/40" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-[100px] animate-pulse delay-1000" />
+      </div>
 
-        <div className="relative">
-          <input
-            ref={inputRef}
-            type={isPassword && !showPassword ? "password" : "text"}
-            placeholder={current.placeholder}
-            value={values[current.key as keyof Values]}
-            onChange={onChange}
-            onKeyDown={onKeyDown}
-            disabled={loading}
-            aria-label={current.text}
-            aria-invalid={!!error}
-            aria-describedby={error ? "input-error" : undefined}
-            autoComplete={
-              current.key === "email"
-                ? "email"
-                : current.key === "password"
-                  ? emailExists
-                    ? "current-password"
-                    : "new-password"
-                  : current.key === "confirmPassword"
-                    ? "new-password"
-                    : current.key === "name"
-                      ? "name"
-                      : "off"
-            }
-            className={`w-full outline-none border-b-2 text-center text-lg sm:text-xl py-2 placeholder:text-gray-400 transition-opacity ${
-              isPassword ? "pr-10" : ""
-            } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
-          />
-
-          {isPassword && (
-            <button
-              type="button"
-              onClick={() => setShowPassword((s) => !s)}
-              disabled={loading}
-              className="absolute right-2 top-2 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded p-1"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          )}
-        </div>
-
-        {error && (
-          <div id="input-error" role="alert" className="text-red-500 text-sm">
-            {error}
+      <div className="relative z-10 w-full max-w-md p-8 mx-4">
+        {/* Glass Card */}
+        <div className="backdrop-blur-xl bg-black/40 border border-white/10 shadow-2xl rounded-3xl p-8 sm:p-10 flex flex-col items-center">
+          {/* Header */}
+          <div className="text-center mb-8 space-y-2">
+            <div className="text-4xl mb-2">{current.emoji}</div>
+            <h1 className="text-2xl font-bold tracking-tight text-white/90">
+              {current.text}
+            </h1>
+            <div className="h-1 w-12 bg-white/20 rounded-full mx-auto" />
           </div>
-        )}
 
-        <div className="flex justify-between items-center">
-          {step > 0 ? (
-            <button
-              onClick={goBack}
-              disabled={loading}
-              className="focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded p-2 disabled:opacity-50"
-              aria-label="Go back"
-            >
-              <ArrowLeft size={20} />
-            </button>
-          ) : (
-            <div />
-          )}
+          <div className="w-full space-y-6">
+            <div className="relative group">
+              <input
+                ref={inputRef}
+                type={isPassword && !showPassword ? "password" : "text"}
+                placeholder={current.placeholder}
+                value={values[current.key as keyof Values]}
+                onChange={onChange}
+                onKeyDown={onKeyDown}
+                disabled={loading}
+                autoComplete="off"
+                autoFocus
+                className={`w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-center text-lg placeholder:text-white/20 text-white outline-none focus:bg-white/10 focus:border-white/20 transition-all duration-300 ${
+                  isPassword ? "pr-12" : ""
+                } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+              />
 
-          <button
-            onClick={next}
-            disabled={loading}
-            className="text-base sm:text-lg font-medium flex items-center gap-2 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-4 py-2"
-          >
-            {loading && <Loader2 className="animate-spin" size={16} />}
-            {loading
-              ? "Loading..."
-              : step === steps.length - 1
-                ? "Submit"
-                : "Next"}
-          </button>
+              {isPassword && (
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  disabled={loading}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors p-1"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              )}
+            </div>
+
+            {error && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 text-sm text-center animate-in fade-in slide-in-from-top-1">
+                {error}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 pt-2">
+              {step > 0 && (
+                <button
+                  onClick={goBack}
+                  disabled={loading}
+                  className="p-4 rounded-xl hover:bg-white/5 text-white/50 hover:text-white transition-colors"
+                  title="Go Back"
+                >
+                  <ArrowLeft size={20} />
+                </button>
+              )}
+
+              <button
+                onClick={next}
+                disabled={loading}
+                className="flex-1 bg-white text-black font-semibold h-14 rounded-2xl hover:bg-gray-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                {loading && <Loader2 className="animate-spin" size={18} />}
+                <span>
+                  {loading
+                    ? "Please wait..."
+                    : step === steps.length - 1
+                      ? "Complete Setup"
+                      : "Continue"}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Step Indicator */}
+        <div className="mt-6 flex justify-center gap-2">
+          {steps.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1 rounded-full transition-all duration-300 ${i === step ? "w-8 bg-white/50" : "w-2 bg-white/10"}`}
+            />
+          ))}
         </div>
       </div>
     </div>

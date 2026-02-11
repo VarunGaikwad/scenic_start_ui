@@ -4,12 +4,12 @@ import { isMe } from "@/api";
 import { Background } from "./components";
 import { deleteDataFromLocalStorage, getDataFromLocalStorage } from "./utils";
 
-const TOKEN = "app:authToken:v1";
+import { STORAGE_KEYS } from "@/constants";
 
 export default function ProtectedApp() {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(() => {
-    return !!getDataFromLocalStorage(TOKEN);
+    return !!getDataFromLocalStorage(STORAGE_KEYS.AUTH_TOKEN);
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -20,20 +20,20 @@ export default function ProtectedApp() {
       if (status === 200) {
         setAuthenticated(true);
       } else if (status === 401) {
-        deleteDataFromLocalStorage(TOKEN);
+        deleteDataFromLocalStorage(STORAGE_KEYS.AUTH_TOKEN);
         setAuthenticated(false);
       }
     } catch (error: any) {
       if (error.response?.status === 401) {
-        deleteDataFromLocalStorage(TOKEN);
+        deleteDataFromLocalStorage(STORAGE_KEYS.AUTH_TOKEN);
         setAuthenticated(false);
       } else if (!navigator.onLine) {
         setError("You're offline. Some features may be limited.");
-        const hasToken = !!localStorage.getItem(TOKEN);
+        const hasToken = !!localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
         setAuthenticated(hasToken);
       } else {
         setError("Unable to verify authentication.");
-        const hasToken = !!localStorage.getItem(TOKEN);
+        const hasToken = !!localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
         setAuthenticated(hasToken);
       }
     } finally {

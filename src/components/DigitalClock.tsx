@@ -78,45 +78,38 @@ export default function DigitalClock() {
   if (!now) {
     // Loading skeleton
     return (
-      <div className="flex justify-between animate-pulse">
-        <div className="space-y-2.5">
-          <div className="h-12 w-32 bg-gray-700 rounded" />
-          <div className="h-6 w-48 bg-gray-700 rounded" />
-        </div>
-        <div className="text-right space-y-2">
-          <div className="h-6 w-24 bg-gray-700 rounded ml-auto" />
-          <div className="h-5 w-32 bg-gray-700 rounded" />
-        </div>
+      <div className="flex flex-col gap-1 w-48 animate-pulse">
+        <div className="h-10 w-32 bg-white/10 rounded" />
+        <div className="h-6 w-24 bg-white/10 rounded" />
       </div>
     );
   }
 
   return (
-    <div className="flex justify-between">
-      <div className="space-y-2.5">
-        <time
-          className="text-5xl font-extrabold tracking-widest block"
-          dateTime={now.toISOString()}
-        >
-          {now.toLocaleTimeString(undefined, {
-            hour: "2-digit",
-            minute: "2-digit",
-            hourCycle: "h23",
-          })}
-        </time>
-
-        <div className="text-xl">
-          {now.toLocaleDateString(undefined, {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          })}
-        </div>
+    <div className="flex flex-col drop-shadow-lg text-white">
+      <time
+        className="text-6xl md:text-7xl font-bold tracking-tight leading-none"
+        dateTime={now.toISOString()}
+        style={{ textShadow: "0 4px 12px rgba(0,0,0,0.5)" }}
+      >
+        {now.toLocaleTimeString(undefined, {
+          hour: "2-digit",
+          minute: "2-digit",
+          hourCycle: "h23",
+        })}
+      </time>
+      <div
+        className="text-lg md:text-xl font-medium opacity-90 tracking-wide mt-1"
+        style={{ textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}
+      >
+        {now.toLocaleDateString(undefined, {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+        })}
       </div>
-
-      <div className="text-right">
-        <div className="text-lg font-extrabold">{userName}</div>
-        <div className="font-semibold">{greeting}</div>
+      <div className="text-sm font-medium text-white/80 mt-2 uppercase tracking-widest">
+        {greeting}, {userName}
       </div>
     </div>
   );

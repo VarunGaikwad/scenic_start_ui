@@ -61,7 +61,7 @@ export default function Modal({
 
       {/* Modal Container */}
       <div
-        className={`relative z-10 w-full ${sizeClasses[size]} rounded-xl bg-zinc-900 border border-white/10 p-6 shadow-2xl transition-all scale-100`}
+        className={`relative z-10 w-full ${sizeClasses[size]} rounded-xl bg-black/40 backdrop-blur-xl border border-white/10 p-6 shadow-2xl transition-all scale-100 ring-1 ring-white/5`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"

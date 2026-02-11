@@ -1,15 +1,14 @@
 import { getWeatherInfo } from "@/api";
-import { UNITS, type WeatherApiResponse } from "@/interface";
+import { type WeatherApiResponse } from "@/interface";
 import { getDataFromLocalStorage, setDataToLocalStorage } from "@/utils";
+import { STORAGE_KEYS, CACHE_DURATIONS } from "@/constants";
 import { MapPinned, RefreshCw } from "lucide-react";
-import { useEffect, useState, useCallback, useMemo } from "react";
-
-const WEATHER_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+import { useEffect, useState, useCallback } from "react";
 
 export default function Weather() {
   const [info, setInfo] = useState<WeatherApiResponse | null>(() => {
     try {
-      return getDataFromLocalStorage("weatherInfo") ?? null;
+      return getDataFromLocalStorage(STORAGE_KEYS.WEATHER_INFO) ?? null;
     } catch {
       return null;
     }
@@ -18,51 +17,14 @@ export default function Weather() {
   const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(
     () => {
       try {
-        return getDataFromLocalStorage("coords") ?? null;
+        return getDataFromLocalStorage(STORAGE_KEYS.COORDS) ?? null;
       } catch {
         return null;
       }
     },
   );
 
-  const [hasNavigatorAccess, setHasNavigatorAccess] = useState(() => {
-    try {
-      return getDataFromLocalStorage("coords") !== null;
-    } catch {
-      return false;
-    }
-  });
-
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
-
-  const requestLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      setLocationError("Geolocation not supported");
-      return;
-    }
-
-    setLocationError(null);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        const newCoords = { lat: latitude, lon: longitude };
-        setCoords(newCoords);
-        setDataToLocalStorage("coords", newCoords);
-        setHasNavigatorAccess(true);
-      },
-      (error) => {
-        if (error.code === error.PERMISSION_DENIED) {
-          setLocationError("Location access denied");
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          setLocationError("Location unavailable");
-        } else {
-          setLocationError("Location timeout");
-        }
-      },
-    );
-  }, []);
 
   // Check for geolocation permission on mount
   useEffect(() => {
@@ -77,8 +39,7 @@ export default function Weather() {
               const { latitude, longitude } = pos.coords;
               const newCoords = { lat: latitude, lon: longitude };
               setCoords(newCoords);
-              setDataToLocalStorage("coords", newCoords);
-              setHasNavigatorAccess(true);
+              setDataToLocalStorage(STORAGE_KEYS.COORDS, newCoords);
             },
             (error) => {
               console.warn("Geolocation error:", error);
@@ -94,15 +55,13 @@ export default function Weather() {
   // Fetch weather with cache check
   const fetchWeather = useCallback(
     async (force = false) => {
-      setError(null);
-
       // Check cache freshness
       if (!force) {
         try {
-          const cachedTime = getDataFromLocalStorage("weatherInfoTimestamp") as
-            | number
-            | undefined;
-          if (cachedTime && Date.now() - cachedTime < WEATHER_CACHE_DURATION) {
+          const cachedTime = getDataFromLocalStorage(
+            STORAGE_KEYS.WEATHER_TIMESTAMP,
+          ) as number | undefined;
+          if (cachedTime && Date.now() - cachedTime < CACHE_DURATIONS.WEATHER) {
             return; // Cache is fresh
           }
         } catch {
@@ -115,15 +74,14 @@ export default function Weather() {
       try {
         const { data } = await getWeatherInfo(coords ?? undefined);
         setInfo(data);
-        setDataToLocalStorage("weatherInfo", data);
-        setDataToLocalStorage("weatherInfoTimestamp", Date.now());
+        setDataToLocalStorage(STORAGE_KEYS.WEATHER_INFO, data);
+        setDataToLocalStorage(STORAGE_KEYS.WEATHER_TIMESTAMP, Date.now());
       } catch (err) {
         console.error("Weather fetch error:", err);
-        setError("Failed to load weather");
 
         // Keep cached data on error
         try {
-          const cached = getDataFromLocalStorage("weatherInfo");
+          const cached = getDataFromLocalStorage(STORAGE_KEYS.WEATHER_INFO);
           if (cached && !info) {
             setInfo(cached as WeatherApiResponse);
           }
@@ -143,173 +101,78 @@ export default function Weather() {
   }, [fetchWeather]);
 
   // Extract and compute weather data
-  const weatherData = useMemo(() => {
-    if (!info) return null;
 
-    return {
-      icon: info.weather?.icon ?? "01d",
-      temp: Math.round(info.temperature.current),
-      feelsLike: Math.round(info.temperature.feels_like),
-      visibility: info.visibility ? (info.visibility / 1000).toFixed(1) : null,
-      sunrise: info.location?.sunrise
-        ? new Date(info.location.sunrise * 1000)
-        : null,
-      sunset: info.location?.sunset
-        ? new Date(info.location.sunset * 1000)
-        : null,
-      locationName: info.location?.name ?? "—",
-      description: info.weather?.description ?? "—",
-      windSpeed: info.wind?.speed ?? null,
-      humidity: info.humidity ?? null,
-      pressure: info.pressure ?? null,
-    };
-  }, [info]);
+  if (!info) {
+    return (
+      <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-black/20 backdrop-blur-md border border-white/10 animate-pulse">
+        <div className="w-8 h-8 rounded-full bg-white/10" />
+        <div className="space-y-1">
+          <div className="w-16 h-4 rounded bg-white/10" />
+          <div className="w-12 h-3 rounded bg-white/10" />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-black/30 shadow-2xl p-5 rounded-4xl w-full max-w-md">
-      {/* Top: Location + Description */}
-      <div className="mb-4">
-        <div className="flex gap-2 items-center justify-between">
-          <div className="text-lg font-bold truncate">
-            {weatherData?.locationName ?? "—"}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {!hasNavigatorAccess && (
-              <button
-                onClick={requestLocation}
-                className="opacity-60 hover:opacity-100 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded p-1"
-                title="Use current location"
-                aria-label="Enable location"
-              >
-                <MapPinned className="w-4 h-4" />
-              </button>
-            )}
-
-            <button
-              onClick={() => fetchWeather(true)}
-              disabled={isLoading}
-              className="opacity-60 hover:opacity-100 transition disabled:opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded p-1"
-              title="Refresh weather"
-              aria-label="Refresh weather data"
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
-              />
-            </button>
+    <div
+      className="group relative flex flex-col gap-4 px-6 py-5 rounded-3xl bg-black/30 backdrop-blur-xl border border-white/10 hover:bg-black/40 transition-all duration-300 shadow-2xl cursor-pointer select-none w-full max-w-[280px]"
+      onClick={() => fetchWeather(true)}
+      title="Click to refresh weather"
+    >
+      {/* Top Section: Icon + Main Temp */}
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-4xl font-bold leading-none text-white tracking-tight drop-shadow-lg">
+            {Math.round(info.temperature.current)}°
+          </span>
+          <div className="flex items-center gap-1.5 text-xs text-white/60 font-medium mt-1">
+            <MapPinned size={12} />
+            <span className="truncate max-w-[100px]">{info.location.name}</span>
           </div>
         </div>
 
-        <div className="text-xs capitalize text-inherit/70 truncate">
-          {weatherData?.description ?? "—"}
+        <div className="relative">
+          <img
+            src={`https://openweathermap.org/img/wn/${info.weather.icon}@2x.png`}
+            alt={info.weather.description}
+            className="w-16 h-16 object-contain drop-shadow-md -my-2"
+          />
+          <RefreshCw
+            size={14}
+            className={`absolute top-0 right-0 text-white/50 opacity-0 group-hover:opacity-100 transition-opacity ${
+              isLoading ? "animate-spin opacity-100" : ""
+            }`}
+          />
         </div>
-
-        {/* Error messages */}
-        {error && <div className="text-xs text-red-400 mt-1">⚠️ {error}</div>}
-        {locationError && (
-          <div className="text-xs text-yellow-400 mt-1">📍 {locationError}</div>
-        )}
       </div>
 
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        {/* Icon + Temperature */}
-        <div className="flex items-center gap-3 min-w-0">
-          <img
-            className="w-16 h-16 shrink-0"
-            src={`https://openweathermap.org/img/wn/${weatherData?.icon ?? "01d"}@2x.png`}
-            alt="Weather icon"
-          />
+      {/* Divider */}
+      <div className="h-px w-full bg-white/10" />
 
-          <div className="leading-none min-w-0">
-            <div className="text-5xl font-extrabold tracking-tight truncate">
-              {weatherData?.temp ?? "--"}
-              <span className="text-3xl align-top">{UNITS.temp}</span>
-            </div>
-
-            <div className="text-xs text-inherit/60 truncate">
-              Feels like{" "}
-              {weatherData?.feelsLike !== undefined
-                ? `${weatherData.feelsLike}${UNITS.temp}`
-                : "—"}
-            </div>
-          </div>
-        </div>
-
-        {/* Metrics */}
-        <div className="hidden md:grid grid-cols-2 gap-x-6 gap-y-3 text-xs font-semibold">
-          <Metric
-            label="Wind"
-            value={
-              weatherData?.windSpeed !== null &&
-              weatherData?.windSpeed !== undefined
-                ? `${weatherData.windSpeed.toFixed(1)} ${UNITS.wind}`
-                : "—"
-            }
-          />
-
-          <Metric
-            label="Humidity"
-            value={
-              weatherData?.humidity !== null &&
-              weatherData?.humidity !== undefined
-                ? `${weatherData.humidity}${UNITS.humidity}`
-                : "—"
-            }
-          />
-
-          <Metric
-            label="Pressure"
-            value={
-              weatherData?.pressure !== null &&
-              weatherData?.pressure !== undefined
-                ? `${weatherData.pressure} ${UNITS.pressure}`
-                : "—"
-            }
-          />
-
-          <Metric
-            label="Visibility"
-            value={
-              weatherData?.visibility !== null
-                ? `${weatherData?.visibility} ${UNITS.visibility}`
-                : "—"
-            }
-          />
-
-          <Metric
-            label="Sunrise"
-            value={
-              weatherData?.sunrise
-                ? weatherData.sunrise.toLocaleTimeString(undefined, {
-                    hour: "numeric",
-                    minute: "numeric",
-                  })
-                : "—"
-            }
-          />
-
-          <Metric
-            label="Sunset"
-            value={
-              weatherData?.sunset
-                ? weatherData.sunset.toLocaleTimeString(undefined, {
-                    hour: "numeric",
-                    minute: "numeric",
-                  })
-                : "—"
-            }
-          />
-        </div>
+      {/* Bottom Section: Grid of Details */}
+      <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+        <DetailItem label="Wind" value={`${Math.round(info.wind.speed)} m/s`} />
+        <DetailItem label="Humidity" value={`${info.humidity}%`} />
+        <DetailItem label="Pressure" value={`${info.pressure} hPa`} />
+        <DetailItem
+          label="Visibility"
+          value={
+            info.visibility ? `${(info.visibility / 1000).toFixed(1)} km` : "—"
+          }
+        />
       </div>
     </div>
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function DetailItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-0 text-xs">
-      <div className="text-inherit truncate">{label}</div>
-      <div className="text-inherit/50 text-xs truncate">{value}</div>
+    <div className="flex flex-col">
+      <span className="text-[10px] uppercase tracking-wider text-white/40 font-semibold">
+        {label}
+      </span>
+      <span className="text-sm font-medium text-white/90">{value}</span>
     </div>
   );
 }
