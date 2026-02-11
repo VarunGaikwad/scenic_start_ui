@@ -97,22 +97,28 @@ export default function Quote() {
 
         if (cancelled) return;
 
-        const shayariPayload = { ...shayariRes.data, date: today };
-        const quotePayload = { ...quoteRes.data, date: today };
+        const shayariPayload = { ...shayariRes[0], date: today };
+        const quotePayload = { ...quoteRes[0], date: today };
 
         setDataToLocalStorage(STORAGE_KEYS.SHAYARI_DATA, shayariPayload);
         setDataToLocalStorage(STORAGE_KEYS.QUOTE_DATA, quotePayload);
 
         const selected =
           currentType === "quotes" ? quotePayload : shayariPayload;
-        setContent({ text: selected.text, author: selected.author });
+        setContent({
+          text: selected?.text || "",
+          author: selected?.author || "",
+        });
       } catch (error) {
         console.error("Failed to fetch daily content:", error);
 
         // Fallback to cached data even if old
         const fallback = shayariData || quotesData;
         if (fallback) {
-          setContent({ text: fallback.text, author: fallback.author });
+          setContent({
+            text: fallback?.text || "",
+            author: fallback?.author || "",
+          });
         }
       } finally {
         if (!cancelled) setIsLoading(false);

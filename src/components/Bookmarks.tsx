@@ -1,5 +1,6 @@
 import {
   deleteBookmark,
+  getBookmarks,
   getBookmarkTree,
   postBookmarkFolder,
   putBookmark,
@@ -13,24 +14,31 @@ import {
   HoneyCombFavIcon,
   LinkModal,
 } from "@/widget";
-import { useEffect, useState, useRef } from "react";
+import { STORAGE_KEYS } from "@/constants";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 export default function Bookmarks() {
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [editingBookmark, setEditingBookmark] =
+    useState<BookmarkTreeType | null>(null);
   const [tree, setTree] = useState<BookmarkTreeType[]>(() => {
-    return (getDataFromLocalStorage("tree") as BookmarkTreeType[] | null) || [];
+    return (
+      (getDataFromLocalStorage(STORAGE_KEYS.BOOKMARK_TREE) as
+        | BookmarkTreeType[]
+        | null) || []
+    );
   });
 
   const [activeTreeId, setActiveTreeId] = useState<string | null>(() => {
-    const activeId = getDataFromLocalStorage("app:activeTreeId:v1") as
+    const activeId = getDataFromLocalStorage(STORAGE_KEYS.ACTIVE_TREE_ID) as
       | string
       | null;
-    return activeId || tree[0]?._id || null;
+    const firstFolder = tree.find((item) => item.type === "folder");
+    return activeId || firstFolder?._id || null;
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [itemsPerRow, setItemsPerRow] = useState(8);
-  const [gridOffset, setGridOffset] = useState(0);
 
   // Calculate items per row based on container width
   useEffect(() => {
@@ -50,53 +58,31 @@ export default function Bookmarks() {
 
   // Sync activeTreeId to localStorage
   useEffect(() => {
-    setDataToLocalStorage("app:activeTreeId:v1", activeTreeId);
+    setDataToLocalStorage(STORAGE_KEYS.ACTIVE_TREE_ID, activeTreeId);
   }, [activeTreeId]);
 
   // Set default activeTreeId if none exists
   useEffect(() => {
     if (!activeTreeId && tree.length > 0) {
-      setActiveTreeId(tree[0]._id);
+      const firstFolder = tree.find((item) => item.type === "folder");
+      if (firstFolder) {
+        setActiveTreeId(firstFolder._id);
+      }
     }
   }, [activeTreeId, tree]);
 
   // Fetch bookmark tree from API on mount
   useEffect(() => {
-    let cancelled = false;
-
     (async function () {
-      setIsLoading(true);
-      try {
-        const data = await getBookmarkTree();
-        if (!cancelled) {
-          setTree(data);
-          setDataToLocalStorage(STORAGE_KEYS.TREE, data);
-
-          // Preserve active ID if it still exists, otherwise use first
-          setActiveTreeId((prev) => {
-            if (prev && data.some((item) => item._id === prev)) {
-              return prev;
-            }
-            return data[0]?._id || null;
-          });
-        }
-      } catch (error) {
-        console.error("Failed to fetch bookmark tree:", error);
-        // Keep cached data on error
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
+      const data = await getBookmarkTree();
+      setTree(data);
+      const firstFolder = data.find((item) => item.type === "folder");
+      setActiveTreeId((prev) => prev || firstFolder?._id || null);
     })();
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   useEffect(() => {
-    setDataToLocalStorage("tree", tree);
+    setDataToLocalStorage(STORAGE_KEYS.BOOKMARK_TREE, tree);
   }, [tree]);
 
   const onDelete = (
@@ -110,52 +96,28 @@ export default function Bookmarks() {
     );
     if (!confirmDelete) return;
 
-      deleteBookmark(id)
-        .then(() => {
-          if (type === "folder" && !parentId) {
-            // Deleting a top-level folder
-            setTree((prev) => {
-              const newArray = prev.filter((folder) => folder._id !== id);
-
-              // Update cache
-              setDataToLocalStorage(STORAGE_KEYS.TREE, newArray);
-
-              // Update active ID if deleted folder was active
-              if (activeTreeId === id) {
-                setActiveTreeId(newArray[0]?._id || null);
-              }
-
-              return newArray;
-            });
-          } else {
-            // Deleting a bookmark inside a folder
-            setTree((prev) => {
-              const newTree = prev.map((folder) => {
-                if (folder._id === parentId) {
-                  return {
-                    ...folder,
-                    children: folder.children.filter(
-                      (child) => child._id !== id,
-                    ),
-                  };
-                }
-                return folder;
-              });
-
-              // Update cache
-              setDataToLocalStorage(STORAGE_KEYS.TREE, newTree);
-
-              return newTree;
-            });
+    deleteBookmark(id!).then(() => {
+      if (type === "folder" && !parentId) {
+        setTree((prev) => {
+          const newArray = prev.filter(({ _id }) => _id !== id);
+          if (activeTreeId === id) {
+            const firstFolder = newArray.find((item) => item.type === "folder");
+            setActiveTreeId(firstFolder?._id || null);
           }
-        })
-        .catch((error) => {
-          console.error("Failed to delete bookmark:", error);
-          alert("Failed to delete. Please try again.");
+          return newArray;
         });
-    },
-    [activeTreeId],
-  );
+      } else {
+        setTree((prev) => {
+          return prev.map((folder) => {
+            if (folder._id === parentId) {
+              folder.children = folder.children.filter(({ _id }) => _id !== id);
+            }
+            return folder;
+          });
+        });
+      }
+    });
+  };
 
   const onSuccess = (item: BookmarkTreeType) => {
     setTree((prev) =>
@@ -173,11 +135,11 @@ export default function Bookmarks() {
       const col = index % itemsPerRow;
       const isOddRow = row % 2 === 1;
 
-    const hexWidth = 112; // Adjusted: 120 - 8 (horizontal overlap)
-    const hexHeight = 90; // Adjusted: 120 - 30 (vertical overlap)
+      const hexWidth = 112; // Adjusted: 120 - 8 (horizontal overlap)
+      const hexHeight = 90; // Adjusted: 120 - 30 (vertical overlap)
 
-    const left = col * hexWidth + (isOddRow ? 56 : 0); // Half of hexWidth for offset
-    const top = row * hexHeight;
+      const left = col * hexWidth + (isOddRow ? 56 : 0); // Half of hexWidth for offset
+      const top = row * hexHeight;
 
       return { left, top };
     },
@@ -189,35 +151,36 @@ export default function Bookmarks() {
 
   const totalItems = children.length + 1;
   const totalRows = Math.ceil(totalItems / itemsPerRow);
-  const containerHeight =
-    totalRows * (HEX_SIZE - HEX_VERTICAL_OVERLAP) + HEX_VERTICAL_OVERLAP;
-
-  const addButtonPosition = getHexPosition(children.length);
+  const containerHeight = totalRows * 90 + 30;
 
   return (
     <div className="flex-1 px-5 py-3">
       <div className="flex gap-4">
-        {tree.map(({ title, type, _id }) => (
-          <FolderCard
-            key={_id}
-            _id={_id}
-            title={title}
-            isActive={_id === activeTreeId}
-            onClick={() => {
-              setActiveTreeId(_id);
-            }}
-            onDelete={() => onDelete(_id, title, type)}
-            onRename={(newName) =>
-              putBookmark(_id!, { title: newName }).then(() => {
-                setTree((prev) =>
-                  prev.map((folder) =>
-                    folder._id === _id ? { ...folder, title: newName } : folder,
-                  ),
-                );
-              })
-            }
-          />
-        ))}
+        {tree
+          .filter((item) => item.type === "folder")
+          .map(({ title, type, _id }) => (
+            <FolderCard
+              key={_id}
+              _id={_id}
+              title={title}
+              isActive={_id === activeTreeId}
+              onClick={() => {
+                setActiveTreeId(_id);
+              }}
+              onDelete={() => onDelete(_id, title, type)}
+              onRename={(newName) =>
+                putBookmark(_id!, { title: newName }).then(() => {
+                  setTree((prev) =>
+                    prev.map((folder) =>
+                      folder._id === _id
+                        ? { ...folder, title: newName }
+                        : folder,
+                    ),
+                  );
+                })
+              }
+            />
+          ))}
 
         {isAddingNew ? (
           <FolderCard
@@ -233,7 +196,7 @@ export default function Bookmarks() {
                 .then((data) => {
                   setTree((prev) => {
                     const newTree = [...prev, data];
-                    setDataToLocalStorage(STORAGE_KEYS.TREE, newTree);
+                    setDataToLocalStorage(STORAGE_KEYS.BOOKMARK_TREE, newTree);
                     return newTree;
                   });
                   setActiveTreeId(data._id);
@@ -279,6 +242,7 @@ export default function Bookmarks() {
                   {...bookmark}
                   onDelete={onDelete}
                   size={120}
+                  onEdit={(item) => setEditingBookmark(item)}
                 />
               </div>
             );

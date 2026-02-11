@@ -72,8 +72,8 @@ export default function Weather() {
       setIsLoading(true);
 
       try {
-        const { data } = await getWeatherInfo(coords ?? undefined);
-        setInfo(data);
+        const data = await getWeatherInfo(coords ?? undefined);
+        setInfo(data as WeatherApiResponse);
         setDataToLocalStorage(STORAGE_KEYS.WEATHER_INFO, data);
         setDataToLocalStorage(STORAGE_KEYS.WEATHER_TIMESTAMP, Date.now());
       } catch (err) {
@@ -99,8 +99,6 @@ export default function Weather() {
   useEffect(() => {
     fetchWeather();
   }, [fetchWeather]);
-
-  // Extract and compute weather data
 
   if (!info) {
     return (

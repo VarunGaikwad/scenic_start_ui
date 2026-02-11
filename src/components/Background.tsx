@@ -88,7 +88,7 @@ export default function Background({
 
       // Fetch new background
       try {
-        const { data } = await getBackgroundImage();
+        const data = await getBackgroundImage();
 
         // Preload before showing
         await preloadMedia(data.image_url, data.media_type);

@@ -3,6 +3,8 @@ import Modal from "./Modal";
 import { postBookmarkLink, putBookmark } from "@/api";
 import type { BookmarkTreeType } from "@/interface";
 
+const MAX_TITLE_LENGTH = 100;
+
 type Props = {
   isModalOpen: boolean;
   setIsModalOpen: (open: boolean) => void;
@@ -79,12 +81,6 @@ export default function LinkModal({
       return false;
     }
   }, [title, url]);
-
-  const handleClose = useCallback(() => {
-    if (!isSubmitting) {
-      setIsModalOpen(false);
-    }
-  }, [isSubmitting, setIsModalOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

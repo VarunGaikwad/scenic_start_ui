@@ -1,5 +1,9 @@
 import { STORAGE_KEYS } from "@/constants";
-import { getDataFromLocalStorage } from "@/utils";
+import {
+  getDataFromLocalStorage,
+  setDataToLocalStorage,
+  deleteDataFromLocalStorage,
+} from "@/utils";
 import axios from "axios";
 
 // Configuration
@@ -24,6 +28,8 @@ client.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  return config;
+});
 
 // Response interceptor - handle errors globally
 client.interceptors.response.use(

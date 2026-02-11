@@ -11,8 +11,6 @@ type Values = {
   confirmPassword: string;
 };
 
-import { STORAGE_KEYS } from "@/constants";
-
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 function validatePassword(password: string): string | null {

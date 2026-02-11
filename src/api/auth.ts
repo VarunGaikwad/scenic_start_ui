@@ -144,10 +144,13 @@ export const getQuotes = (signal?: AbortSignal) =>
 
 export const getBookmarkTree = async (
   signal?: AbortSignal,
-): Promise<BookmarkTreeType> => {
-  const { data } = await client.get<BookmarkTreeType>(`${PATH}/bookmark/tree`, {
-    signal,
-  });
+): Promise<BookmarkTreeType[]> => {
+  const { data } = await client.get<BookmarkTreeType[]>(
+    `${PATH}/bookmark/tree`,
+    {
+      signal,
+    },
+  );
   return data;
 };
 
