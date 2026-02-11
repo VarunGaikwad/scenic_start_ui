@@ -178,6 +178,39 @@ export default function Bookmarks() {
                   );
                 })
               }
+              onDrop={(item) => {
+                if (item.type === "bookmark" && item.id) {
+                  // Don't move if dropping on same folder or current folder is same as target
+                  if (_id === activeTreeId) return;
+
+                  putBookmark(item.id, { parentId: _id }).then(() => {
+                    setTree((prev) => {
+                      // Remove from old location and add to new location logic would be complex with optimistic UI
+                      // For now, let's just re-fetch or simpler:
+                      // Remove from current active folder (optimistic)
+                      const newTree = prev.map((folder) => {
+                        if (folder._id === activeTreeId) {
+                          return {
+                            ...folder,
+                            children: folder.children.filter(
+                              (c) => c._id !== item.id,
+                            ),
+                          };
+                        }
+                        // We could add to target folder optimistically too if we knew the full bookmark object
+                        // But we only have ID here.
+                        // Ideally we should find the object first.
+                        return folder;
+                      });
+                      return newTree;
+                    });
+                    
+                    // Re-fetch to be sure we have correct state including the moved item in new folder
+                    // This avoids needing to pass the whole bookmark object in drag data
+                    getBookmarkTree().then(setTree);
+                  });
+                }
+              }}
             />
           ))}
 

@@ -37,6 +37,9 @@ export const STORAGE_KEYS = {
 
   // Calendar
   CALENDAR_TASKS: "scenic:v1:calendar:tasks",
+
+  // Background
+  BACKGROUND_DATA: "scenic:v1:background:data",
 };
 
 export const CACHE_DURATIONS = {

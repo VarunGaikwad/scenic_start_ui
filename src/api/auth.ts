@@ -225,3 +225,4 @@ export const putBookmark = async (
 export const deleteBookmark = async (id: string): Promise<void> => {
   await client.delete(`${PATH}/bookmark/${id}`);
 };
+

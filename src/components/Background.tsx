@@ -1,8 +1,9 @@
 import { getBackgroundImage } from "@/api";
+import { STORAGE_KEYS } from "@/constants";
 import type { CachedImage, ImageResponseType } from "@/interface";
 import { useEffect, useState } from "react";
 
-const CACHE_KEY = "app:dailyBackground:v1";
+const CACHE_KEY = STORAGE_KEYS.BACKGROUND_DATA;
 
 function getToday(): string {
   return new Date().toISOString().slice(0, 10);

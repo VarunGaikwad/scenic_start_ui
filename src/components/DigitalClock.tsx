@@ -1,3 +1,4 @@
+import { STORAGE_KEYS } from "@/constants";
 import { useEffect, useState, useMemo } from "react";
 
 const GREETING_TIMES = {
@@ -60,7 +61,7 @@ export default function DigitalClock() {
 
   // Load and sync user name
   useEffect(() => {
-    const storedName = localStorage.getItem("name");
+    const storedName = localStorage.getItem(STORAGE_KEYS.USER_NAME);
     if (storedName) setUserName(storedName);
 
     const handleStorageChange = (e: StorageEvent) => {

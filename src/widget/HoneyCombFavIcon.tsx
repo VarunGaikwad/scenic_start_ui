@@ -38,7 +38,8 @@ export default function HoneyCombFavIcon({
     }
   }, [url]);
 
-  const logoSrc = `https://favicon.vemetric.com/${hostname}`;
+  // const logoSrc = `https://favicon.vemetric.com/${hostname}`;
+  const logoSrc = `https://scenic-start-node-ten.vercel.app/auth/favorite-icon?domain=${hostname}`;
   const fallbackSrc = `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -58,7 +59,10 @@ export default function HoneyCombFavIcon({
   };
 
   const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData("bookmarkId", _id);
+    e.dataTransfer.setData(
+      "application/json",
+      JSON.stringify({ id: _id, type: "bookmark" }),
+    );
     e.dataTransfer.effectAllowed = "move";
   };
 
