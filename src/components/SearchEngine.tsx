@@ -9,6 +9,7 @@ import { Search, ExternalLink } from "lucide-react";
 import { getDataFromLocalStorage, setDataToLocalStorage } from "@/utils";
 import { STORAGE_KEYS } from "@/constants";
 import type { BookmarkTreeType } from "@/interface";
+import { WidgetHexagon } from "@/widget";
 
 interface Engine {
   name: string;
@@ -57,6 +58,7 @@ export default function SearchEngine() {
   const [allBookmarks, setAllBookmarks] = useState<BookmarkTreeType[]>([]);
   const [suggestions, setSuggestions] = useState<BookmarkTreeType[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+  const [activeWidgetId, setActiveWidgetId] = useState<string | null>(null);
 
   // Load and flatten bookmarks
   useEffect(() => {
@@ -68,7 +70,7 @@ export default function SearchEngine() {
       const flatten = (nodes: BookmarkTreeType[]): BookmarkTreeType[] => {
         let acc: BookmarkTreeType[] = [];
         for (const node of nodes) {
-          if (node.url && node.type !== "folder") {
+          if (node.type === "widget" || (node.url && node.type !== "folder")) {
             acc.push(node);
           }
           if (node.children && node.children.length > 0) {
@@ -97,11 +99,16 @@ export default function SearchEngine() {
     }, 150);
   };
 
-  const openBookmark = (url: string) => {
-    window.open(url, "_blank", "noopener,noreferrer");
-    setSearchText("");
-    setSuggestions([]);
-    setSelectedIndex(-1);
+  const openBookmark = (item: BookmarkTreeType) => {
+    if (item.type === "widget") {
+      setActiveWidgetId(item._id);
+      setIsSearching(false); // Close search dropdown
+    } else if (item.url) {
+      window.open(item.url, "_blank", "noopener,noreferrer");
+      setSearchText("");
+      setSuggestions([]);
+      setSelectedIndex(-1);
+    }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
@@ -126,7 +133,7 @@ export default function SearchEngine() {
 
       // If a suggestion is selected, open it
       if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
-        openBookmark(suggestions[selectedIndex].url!);
+        openBookmark(suggestions[selectedIndex]);
         return;
       }
 
@@ -232,28 +239,38 @@ export default function SearchEngine() {
           </div>
           <ul>
             {suggestions.map((bookmark, index) => {
-              const hostname = new URL(bookmark.url!).hostname;
+              const isWidget = bookmark.type === "widget";
+              const hostname = bookmark.url
+                ? new URL(bookmark.url).hostname
+                : "";
               const faviconUrl = `https://scenic-start-node-ten.vercel.app/auth/favorite-icon?domain=${hostname}`;
 
               return (
                 <li key={bookmark._id}>
                   <button
-                    onClick={() => openBookmark(bookmark.url!)}
+                    onClick={() => openBookmark(bookmark)}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                       index === selectedIndex
                         ? "bg-white/10 text-white"
                         : "text-white/80 hover:bg-white/5 hover:text-white"
                     }`}
                   >
-                    <img
-                      src={faviconUrl}
-                      alt=""
-                      className="w-5 h-5 rounded-sm opacity-80"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
-                      }}
-                    />
+                    {isWidget ? (
+                      <div className="w-5 h-5 rounded-sm bg-blue-500/20 flex items-center justify-center text-blue-400">
+                        {/* We could import icons here, but for simplicity let's just use a generic one or text */}
+                        <div className="w-2 h-2 rounded-full bg-current" />
+                      </div>
+                    ) : (
+                      <img
+                        src={faviconUrl}
+                        alt=""
+                        className="w-5 h-5 rounded-sm opacity-80"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
+                        }}
+                      />
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate">
                         {bookmark.title}
@@ -272,6 +289,21 @@ export default function SearchEngine() {
           </ul>
         </div>
       )}
+      {/* Hidden widgets manager to show modals when activated via search */}
+      <div className="hidden">
+        {allBookmarks
+          .filter((b) => b.type === "widget")
+          .map((widget) => (
+            <WidgetHexagon
+              key={widget._id}
+              {...widget}
+              isOpen={activeWidgetId === widget._id}
+              onClose={() => setActiveWidgetId(null)}
+              // Read-only in search view, so no delete/edit needed
+              isDeletable={false}
+            />
+          ))}
+      </div>
     </div>
   );
 }

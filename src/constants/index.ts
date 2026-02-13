@@ -42,6 +42,8 @@ export const STORAGE_KEYS = {
   BACKGROUND_DATA: "scenic:v1:background:data",
 
   QUOTE_LAST_FETCH: "scenic:v1:quote:last_fetch",
+
+  LRT_SOURCE: "scenic:v1:lrt:source",
 };
 
 export const CACHE_DURATIONS = {

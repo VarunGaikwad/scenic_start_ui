@@ -12,6 +12,7 @@ import {
   FolderCard,
   HoneyCombFavIcon,
   LinkModal,
+  WidgetHexagon,
 } from "@/widget";
 import { STORAGE_KEYS } from "@/constants";
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -38,6 +39,52 @@ export default function Bookmarks() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [itemsPerRow, setItemsPerRow] = useState(8);
+  const [activeWidgetId, setActiveWidgetId] = useState<string | null>(null);
+
+  // Keyboard shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input
+      if (
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA"
+      ) {
+        return;
+      }
+
+      // Find widget with matching shortcut
+      // Search recursively in the tree
+      const findWidgetByShortcut = (
+        nodes: BookmarkTreeType[],
+      ): BookmarkTreeType | undefined => {
+        for (const node of nodes) {
+          if (
+            node.type === "widget" &&
+            node.shortcut &&
+            node.shortcut.toLowerCase() === e.key.toLowerCase()
+          ) {
+            return node;
+          }
+          if (node.children) {
+            const found = findWidgetByShortcut(node.children);
+            if (found) return found;
+          }
+        }
+        return undefined;
+      };
+
+      const widget = findWidgetByShortcut(tree);
+      if (widget) {
+        // Toggle if same widget is active, otherwise open new one
+        setActiveWidgetId((prev) => (prev === widget._id ? null : widget._id));
+      } else if (e.key === "Escape") {
+        setActiveWidgetId(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [tree]);
 
   // Calculate items per row based on container width
   useEffect(() => {
@@ -73,10 +120,21 @@ export default function Bookmarks() {
   // Fetch bookmark tree from API on mount
   useEffect(() => {
     (async function () {
-      const data = await getBookmarkTree();
-      setTree(data);
-      const firstFolder = data.find((item) => item.type === "folder");
-      setActiveTreeId((prev) => prev || firstFolder?._id || null);
+      try {
+        const data = await getBookmarkTree();
+        setTree((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(data)) {
+            return prev;
+          }
+          return data;
+        });
+
+        // Set active tree ID if not set
+        const firstFolder = data.find((item) => item.type === "folder");
+        setActiveTreeId((prev) => prev || firstFolder?._id || null);
+      } catch (error) {
+        console.error("Failed to fetch bookmarks:", error);
+      }
     })();
   }, []);
 
@@ -270,12 +328,23 @@ export default function Bookmarks() {
                   animationFillMode: "forwards",
                 }}
               >
-                <HoneyCombFavIcon
-                  {...bookmark}
-                  onDelete={onDelete}
-                  size={120}
-                  onEdit={(item) => setEditingBookmark(item)}
-                />
+                {bookmark.type === "widget" ? (
+                  <WidgetHexagon
+                    {...bookmark}
+                    onDelete={onDelete}
+                    size={120}
+                    isOpen={activeWidgetId === bookmark._id}
+                    onOpen={() => setActiveWidgetId(bookmark._id)}
+                    onClose={() => setActiveWidgetId(null)}
+                  />
+                ) : (
+                  <HoneyCombFavIcon
+                    {...bookmark}
+                    onDelete={onDelete}
+                    size={120}
+                    onEdit={(item) => setEditingBookmark(item)}
+                  />
+                )}
               </div>
             );
           })}

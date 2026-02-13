@@ -1,4 +1,6 @@
 export { default as Modal } from "./Modal";
+export { default as WidgetHexagon } from "./WidgetHexagon";
+
 export { default as FolderCard } from "./FolderCard";
 export { default as AddFolderCard } from "./AddFolderCard";
 export { default as HoneyCombFavIcon } from "./HoneyCombFavIcon";

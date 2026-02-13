@@ -203,6 +203,23 @@ export const postBookmarkLink = async (
   return data;
 };
 
+export const postBookmarkWidget = async (
+  title: string,
+  widgetType: string,
+  parentId?: string | null,
+  shortcut?: string,
+): Promise<BookmarkTreeType> => {
+  const { data } = await client.post<BookmarkTreeType>(`${PATH}/bookmark`, {
+    type: "widget",
+    title,
+    url: `widget://${widgetType}`,
+    widgetType,
+    shortcut,
+    parentId: parentId ?? null,
+  });
+  return data;
+};
+
 // ==================== UPDATE ====================
 
 export const putBookmark = async (
@@ -225,4 +242,3 @@ export const putBookmark = async (
 export const deleteBookmark = async (id: string): Promise<void> => {
   await client.delete(`${PATH}/bookmark/${id}`);
 };
-

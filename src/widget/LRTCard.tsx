@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { TrainFront, MapPin, ArrowRightLeft, Clock } from "lucide-react";
+import { TrainFront, ArrowRight, Clock } from "lucide-react";
+import { STORAGE_KEYS } from "@/constants";
 
 type Trip = {
   departure: string;
@@ -16,8 +17,16 @@ type Route = {
 
 const WALK_BUFFER = 15; // minutes to reach station
 
-export default function LRTCard() {
-  const [source, setSource] = useState<"kashi" | "mine">("kashi");
+type Props = {
+  variant?: "default" | "minimal";
+};
+
+export default function LRTCard({ variant = "default" }: Props) {
+  const [source, setSource] = useState<"kashi" | "mine">(() => {
+    const stored = localStorage.getItem(STORAGE_KEYS.LRT_SOURCE);
+    if (stored === "kashi" || stored === "mine") return stored;
+    return "kashi";
+  });
   const [now, setNow] = useState(new Date());
   const [data, setData] = useState<{ routes: Route[] } | null>(null);
 
@@ -70,88 +79,144 @@ export default function LRTCard() {
     });
   }, [catchableTrips, currentMinutes]);
 
+  const toggleSource = () => {
+    const next = source === "kashi" ? "mine" : "kashi";
+    setSource(next);
+    localStorage.setItem(STORAGE_KEYS.LRT_SOURCE, next);
+  };
+
   if (!data) {
     return (
-      <div className="p-5 rounded-3xl bg-black/20 backdrop-blur-xl border border-white/10 animate-pulse w-full max-w-70">
-        Loading...
+      <div
+        className={`w-full rounded-2xl animate-pulse ${
+          variant === "default"
+            ? "p-5 bg-white/[0.04] border border-white/[0.06]"
+            : ""
+        }`}
+      >
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="w-5 h-5 rounded bg-white/10" />
+          <div className="h-4 w-28 rounded bg-white/10" />
+        </div>
+        <div className="space-y-3">
+          <div className="h-14 rounded-xl bg-white/[0.04]" />
+          <div className="h-14 rounded-xl bg-white/[0.04]" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="group relative flex flex-col gap-5 px-6 py-5 rounded-3xl bg-black/30 backdrop-blur-xl border border-white/10 hover:bg-black/40 transition-all duration-300 shadow-2xl cursor-pointer select-none w-full max-w-70">
-      {/* Header */}
-      <div className="flex items-center gap-2">
-        <TrainFront className="w-6 h-6 text-blue-500" />
-        <h2 className="text-xl font-semibold text-white drop-shadow-md">
-          Next LRT Train
-        </h2>
-      </div>
-
-      {/* Toggle */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setSource("kashi")}
-          className={`flex-1 py-2 rounded-xl text-sm font-medium transition 
-            ${source === "kashi" ? "bg-blue-500 text-white" : "bg-white/10 hover:bg-white/20 text-white"}`}
-        >
-          かしの森公園前
-        </button>
-        <button
-          onClick={() => setSource("mine")}
-          className={`flex-1 py-2 rounded-xl text-sm font-medium transition 
-            ${source === "mine" ? "bg-blue-500 text-white" : "bg-white/10 hover:bg-white/20 text-white"}`}
-        >
-          峰
-        </button>
-      </div>
-
-      {/* Route Info */}
-      <div className="flex items-center gap-2 text-sm text-white/60">
-        <MapPin className="w-4 h-4" />
-        <span>{selectedRoute?.from}</span>
-        <ArrowRightLeft className="w-4 h-4" />
-        <span>{selectedRoute?.to}</span>
-      </div>
-
-      {/* Catchable Trains */}
-      {tripsWithLeaveTime.length > 0 ? (
-        <div className="space-y-4">
-          {tripsWithLeaveTime.map((trip, idx) => (
-            <div
-              key={idx}
-              className="p-3 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1"
-            >
-              <div className="flex justify-between text-white font-medium">
-                <span>Departure</span>
-                <span>{trip.departure}</span>
-              </div>
-              <div className="flex justify-between text-white/90 font-medium">
-                <span>Arrival</span>
-                <span>{trip.arrival}</span>
-              </div>
-              {trip.leaveIn > 0 ? (
-                <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
-                  <Clock className="w-4 h-4" />
-                  Leave in {trip.leaveIn} min
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-red-500 text-sm font-medium">
-                  <Clock className="w-4 h-4" />
-                  Leave now!
-                </div>
-              )}
-            </div>
-          ))}
+    <div
+      className={`w-full select-none ${
+        variant === "default"
+          ? "rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] hover:bg-white/[0.06] transition-all duration-300 shadow-lg overflow-hidden"
+          : ""
+      }`}
+    >
+      {/* Header bar */}
+      <div className="flex items-center justify-between px-5 pt-4 pb-3">
+        <div className="flex items-center gap-2">
+          <TrainFront className="w-4.5 h-4.5 text-blue-400" />
+          <h2 className="text-sm font-semibold text-white/90 tracking-tight">
+            Next Train
+          </h2>
         </div>
-      ) : (
-        <div className="text-red-500 font-medium">No more trains today.</div>
-      )}
+        <span className="text-[10px] text-white/30 font-medium">
+          {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+        </span>
+      </div>
 
-      {/* Current Time */}
-      <div className="text-xs text-white/40 pt-2 border-t border-white/10">
-        Current time:{" "}
-        {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+      {/* Station toggle */}
+      <div className="px-4 pb-3">
+        <button
+          onClick={toggleSource}
+          className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.05] transition-all duration-200 group"
+        >
+          <span className="text-xs font-medium text-white/70">
+            {selectedRoute?.from}
+          </span>
+          <ArrowRight className="w-3.5 h-3.5 text-white/30 group-hover:text-white/50 transition-colors" />
+          <span className="text-xs font-medium text-white/70">
+            {selectedRoute?.to}
+          </span>
+        </button>
+      </div>
+
+      {/* Trips list */}
+      <div className="px-4 pb-4 space-y-2">
+        {tripsWithLeaveTime.length > 0 ? (
+          tripsWithLeaveTime.map((trip, idx) => {
+            const isUrgent = trip.leaveIn <= 0;
+            const isSoon = trip.leaveIn > 0 && trip.leaveIn <= 10;
+
+            return (
+              <div
+                key={idx}
+                className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all duration-200 ${
+                  idx === 0
+                    ? isUrgent
+                      ? "bg-red-500/10 border-red-500/20"
+                      : isSoon
+                        ? "bg-amber-500/10 border-amber-500/15"
+                        : "bg-blue-500/10 border-blue-500/15"
+                    : "bg-white/[0.02] border-white/[0.04]"
+                }`}
+              >
+                {/* Times */}
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`text-sm font-semibold tabular-nums ${
+                      idx === 0 ? "text-white" : "text-white/60"
+                    }`}
+                  >
+                    {trip.departure}
+                  </span>
+                  <ArrowRight
+                    className={`w-3 h-3 ${
+                      idx === 0 ? "text-white/40" : "text-white/20"
+                    }`}
+                  />
+                  <span
+                    className={`text-sm tabular-nums ${
+                      idx === 0 ? "text-white/80" : "text-white/40"
+                    }`}
+                  >
+                    {trip.arrival}
+                  </span>
+                </div>
+
+                {/* Leave time badge */}
+                <div className="flex items-center gap-1.5">
+                  <Clock
+                    className={`w-3 h-3 ${
+                      isUrgent
+                        ? "text-red-400"
+                        : isSoon
+                          ? "text-amber-400"
+                          : "text-white/30"
+                    }`}
+                  />
+                  <span
+                    className={`text-xs font-medium tabular-nums ${
+                      isUrgent
+                        ? "text-red-400"
+                        : isSoon
+                          ? "text-amber-400"
+                          : "text-white/40"
+                    }`}
+                  >
+                    {trip.leaveIn > 0 ? `${trip.leaveIn}m` : "Now!"}
+                  </span>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="text-center py-4 text-sm text-white/30">
+            No more trains today
+          </div>
+        )}
       </div>
     </div>
   );

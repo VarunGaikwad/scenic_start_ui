@@ -6,7 +6,7 @@ interface HoneyCombFavIconProps extends BookmarkTreeType {
   onDelete?: (
     id: string,
     title: string,
-    type: "folder" | "link",
+    type: "folder" | "link" | "widget",
     parentId?: string,
   ) => void;
   isDeletable?: boolean;
@@ -38,10 +38,10 @@ export default function HoneyCombFavIcon({
     }
   }, [url]);
 
-  // const logoSrc = `https://favicon.vemetric.com/${hostname}`;
+  // Use Google's reliable favicon service
   const logoSrc = `https://scenic-start-node-ten.vercel.app/auth/favorite-icon?domain=${hostname}`;
-  const fallbackSrc = `https://favicon.vemetric.com/${hostname}`;
-  // const fallbackSrc = `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
+  // Fallback to DuckDuckGo if needed, or maintain existing fallback
+  const fallbackSrc = `https://icons.duckduckgo.com/ip3/${hostname}.ico`;
 
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigation

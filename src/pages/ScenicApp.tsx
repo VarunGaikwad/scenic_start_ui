@@ -1,6 +1,6 @@
 import {
   Background,
-  Bookmarks,
+  Dashboard,
   DigitalClock,
   Quote,
   SearchEngine,
@@ -26,14 +26,14 @@ export default function ScenicApp() {
       </header>
 
       {/* Main Content - Centered */}
-      <main className="absolute inset-0 flex flex-col items-center justify-start p-12 z-10 overflow-y-auto scrollbar-hide pt-0 pb-48">
-        <div className="w-full max-w-5xl flex flex-col items-center gap-16">
+      <main className="absolute inset-0 flex flex-col items-center justify-start px-6 z-10 overflow-y-auto scrollbar-hide pt-40 pb-64">
+        <div className="w-full max-w-6xl flex flex-col items-center gap-8">
           <div className="w-full max-w-2xl transform hover:scale-[1.01] transition-transform duration-500 z-50 sticky top-4">
             <SearchEngine />
           </div>
 
           <div className="w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150 z-0">
-            <Bookmarks />
+            <Dashboard />
           </div>
         </div>
       </main>

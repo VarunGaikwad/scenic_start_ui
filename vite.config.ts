@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   plugins: [react(), tailwindcss()],
 
   resolve: {
@@ -25,8 +25,8 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist",
     emptyOutDir: true,
-    sourcemap: mode !== "production",
+    sourcemap: true,
   },
 
   base: "./",
-}));
+});
