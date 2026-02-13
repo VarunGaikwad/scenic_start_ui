@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import Modal from "./Modal";
-import { postBookmarkLink, postBookmarkWidget, putBookmark } from "@/api";
+import { postBookmarkLink, putBookmark } from "@/api";
 import type { BookmarkTreeType } from "@/interface";
 
 const MAX_TITLE_LENGTH = 100;
@@ -27,8 +27,6 @@ export default function LinkModal({
   bookmarkId,
   isEditMode = false,
 }: Props) {
-  const [type, setType] = useState<"link" | "widget">("link");
-  const [widgetType, setWidgetType] = useState("LRT");
   const [title, setTitle] = useState(initialTitle);
   const [url, setUrl] = useState(initialUrl);
   const [touched, setTouched] = useState({ title: false, url: false });
@@ -42,7 +40,6 @@ export default function LinkModal({
       setUrl(initialUrl);
       setTouched({ title: false, url: false });
       setApiError("");
-      setType("link");
     }
   }, [isModalOpen, initialTitle, initialUrl]);
 
@@ -60,7 +57,6 @@ export default function LinkModal({
   }, [title, touched.title]);
 
   const urlError = useMemo(() => {
-    if (type === "widget") return "";
     if (!touched.url) return "";
     if (!url.trim()) return "URL is required";
 
@@ -70,7 +66,7 @@ export default function LinkModal({
     } catch {
       return "Invalid URL";
     }
-  }, [url, touched.url, type]);
+  }, [url, touched.url]);
 
   const isFormValid = useMemo(() => {
     const trimmedTitle = title.trim();
@@ -78,16 +74,13 @@ export default function LinkModal({
       return false;
     }
 
-    if (type === "link") {
-      try {
-        new URL(normalizeUrl(url));
-        return true;
-      } catch {
-        return false;
-      }
+    try {
+      new URL(normalizeUrl(url));
+      return true;
+    } catch {
+      return false;
     }
-    return true;
-  }, [title, url, type]);
+  }, [title, url]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,45 +96,36 @@ export default function LinkModal({
     try {
       let result: BookmarkTreeType;
 
-      if (type === "widget") {
-        if (!activeTreeId) throw new Error("Parent ID required for new widget");
-        result = await postBookmarkWidget(
+      const normalizedUrl = normalizeUrl(url);
+
+      if (isEditMode && bookmarkId) {
+        await putBookmark(bookmarkId, {
+          title: title.trim(),
+          url: normalizedUrl,
+        });
+        // Mock the object to return for immediate UI update
+        result = {
+          _id: bookmarkId,
+          title: title.trim(),
+          url: normalizedUrl,
+          type: "link",
+          parentId: activeTreeId || "",
+          children: [],
+        };
+      } else {
+        if (!activeTreeId) throw new Error("Parent ID required for new link");
+        result = await postBookmarkLink(
           title.trim(),
-          widgetType,
+          normalizedUrl,
           activeTreeId,
         );
-      } else {
-        const normalizedUrl = normalizeUrl(url);
-
-        if (isEditMode && bookmarkId) {
-          await putBookmark(bookmarkId, {
-            title: title.trim(),
-            url: normalizedUrl,
-          });
-          // Mock the object to return for immediate UI update
-          result = {
-            _id: bookmarkId,
-            title: title.trim(),
-            url: normalizedUrl,
-            type: "link",
-            parentId: activeTreeId || "",
-            children: [],
-          };
-        } else {
-          if (!activeTreeId) throw new Error("Parent ID required for new link");
-          result = await postBookmarkLink(
-            title.trim(),
-            normalizedUrl,
-            activeTreeId,
-          );
-        }
       }
 
       onSuccess(result);
       setIsModalOpen(false);
     } catch {
       setApiError(
-        `Failed to ${isEditMode ? "update" : "add"} ${type}. Try again.`,
+        `Failed to ${isEditMode ? "update" : "add"} link. Try again.`,
       );
     } finally {
       setIsSubmitting(false);
@@ -155,33 +139,6 @@ export default function LinkModal({
       title={isEditMode ? "Edit link" : "Add new item"}
       size="sm"
     >
-      {!isEditMode && (
-        <div className="flex bg-zinc-800 rounded-lg p-1 mb-6">
-          <button
-            type="button"
-            onClick={() => setType("link")}
-            className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${
-              type === "link"
-                ? "bg-zinc-700 text-white shadow-sm"
-                : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            Link
-          </button>
-          <button
-            type="button"
-            onClick={() => setType("widget")}
-            className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${
-              type === "widget"
-                ? "bg-zinc-700 text-white shadow-sm"
-                : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            Widget
-          </button>
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-6" noValidate>
         {/* Title */}
         <div>
@@ -197,9 +154,7 @@ export default function LinkModal({
             id="bookmark-title"
             type="text"
             autoFocus
-            placeholder={
-              type === "link" ? "Q1 Marketing Dashboard" : "My Widget"
-            }
+            placeholder="Q1 Marketing Dashboard"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={() => setTouched((t) => ({ ...t, title: true }))}
@@ -223,63 +178,44 @@ export default function LinkModal({
           )}
         </div>
 
-        {/* URL or Widget Type */}
-        {type === "link" ? (
-          <div>
-            <label
-              htmlFor="bookmark-url"
-              className="block text-sm mb-1 text-zinc-400"
-            >
-              URL
-            </label>
-            <input
-              id="bookmark-url"
-              type="url"
-              placeholder="example.com/dashboard"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              onBlur={() => setTouched((t) => ({ ...t, url: true }))}
-              autoComplete="url"
-              disabled={isSubmitting}
-              className={`w-full rounded-lg bg-zinc-800 px-4 py-2.5 text-white
-                border transition-all outline-none
-                focus:ring-2 focus:ring-blue-500/50
-                disabled:opacity-50 disabled:cursor-not-allowed
-                ${
-                  urlError
-                    ? "border-red-500/60"
-                    : "border-white/10 focus:border-blue-500/60"
-                }`}
-            />
-            {urlError && (
-              <p className="mt-1 text-xs text-red-400" role="alert">
-                {urlError}
-              </p>
-            )}
-            {url && !urlError && touched.url && (
-              <p className="mt-1 text-xs text-zinc-500">
-                Will be saved as: {normalizeUrl(url)}
-              </p>
-            )}
-          </div>
-        ) : (
-          <div>
-            <label
-              htmlFor="widget-type"
-              className="block text-sm mb-1 text-zinc-400"
-            >
-              Widget Type
-            </label>
-            <select
-              id="widget-type"
-              value={widgetType}
-              onChange={(e) => setWidgetType(e.target.value)}
-              className="w-full rounded-lg bg-zinc-800 px-4 py-2.5 text-white border border-white/10 outline-none focus:border-blue-500/60"
-            >
-              <option value="LRT">LRT Card</option>
-            </select>
-          </div>
-        )}
+        {/* URL */}
+        <div>
+          <label
+            htmlFor="bookmark-url"
+            className="block text-sm mb-1 text-zinc-400"
+          >
+            URL
+          </label>
+          <input
+            id="bookmark-url"
+            type="url"
+            placeholder="example.com/dashboard"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onBlur={() => setTouched((t) => ({ ...t, url: true }))}
+            autoComplete="url"
+            disabled={isSubmitting}
+            className={`w-full rounded-lg bg-zinc-800 px-4 py-2.5 text-white
+              border transition-all outline-none
+              focus:ring-2 focus:ring-blue-500/50
+              disabled:opacity-50 disabled:cursor-not-allowed
+              ${
+                urlError
+                  ? "border-red-500/60"
+                  : "border-white/10 focus:border-blue-500/60"
+              }`}
+          />
+          {urlError && (
+            <p className="mt-1 text-xs text-red-400" role="alert">
+              {urlError}
+            </p>
+          )}
+          {url && !urlError && touched.url && (
+            <p className="mt-1 text-xs text-zinc-500">
+              Will be saved as: {normalizeUrl(url)}
+            </p>
+          )}
+        </div>
 
         {apiError && (
           <p className="text-xs text-red-400 text-center" role="alert">
@@ -302,7 +238,7 @@ export default function LinkModal({
               : "Adding…"
             : isEditMode
               ? "Save changes"
-              : `Add ${type}`}
+              : "Add Link"}
         </button>
       </form>
     </Modal>

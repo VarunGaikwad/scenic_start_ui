@@ -7,3 +7,5 @@ export { default as HoneyCombFavIcon } from "./HoneyCombFavIcon";
 export { default as AddMoreHexagon } from "./AddMoreHexagon";
 export { default as LinkModal } from "./LinkModal";
 export { default as LRTCard } from "./LRTCard";
+export { default as TranslationCard } from "./TranslationCard";
+export { default as FolderModal } from "./FolderModal";

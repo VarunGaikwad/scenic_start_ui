@@ -70,7 +70,7 @@ export default function SearchEngine() {
       const flatten = (nodes: BookmarkTreeType[]): BookmarkTreeType[] => {
         let acc: BookmarkTreeType[] = [];
         for (const node of nodes) {
-          if (node.type === "widget" || (node.url && node.type !== "folder")) {
+          if (node.url && node.type !== "folder") {
             acc.push(node);
           }
           if (node.children && node.children.length > 0) {

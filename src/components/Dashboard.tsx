@@ -1,14 +1,9 @@
-import { LinkModal, FolderCard } from "@/widget";
+import { LinkModal, FolderCard, TranslationCard, FolderModal } from "@/widget";
 import LRTCard from "@/widget/LRTCard";
 import { Plus, Pencil, Trash2, FolderOpen } from "lucide-react";
 import { STORAGE_KEYS } from "@/constants";
 import { getDataFromLocalStorage, setDataToLocalStorage } from "@/utils";
-import {
-  deleteBookmark,
-  getBookmarkTree,
-  postBookmarkFolder,
-  putBookmark,
-} from "@/api";
+import { deleteBookmark, getBookmarkTree, putBookmark } from "@/api";
 import type { BookmarkTreeType } from "@/interface";
 import { useEffect, useState, useCallback } from "react";
 
@@ -126,10 +121,8 @@ export default function Dashboard() {
   const children = activeFolder?.children || [];
   const bookmarks = children.filter((c) => c.type !== "widget");
 
-  // Collect all widgets from all folders
-  const allWidgets = tree.flatMap((folder) =>
-    folder.children ? folder.children.filter((c) => c.type === "widget") : [],
-  );
+  // Collect widgets only from the ACTIVE folder
+  const activeWidgets = children.filter((c) => c.type === "widget");
 
   const folders = tree.filter((item) => item.type === "folder");
 
@@ -167,44 +160,32 @@ export default function Dashboard() {
           ))}
 
           {/* New folder inline */}
-          {isAddingFolder ? (
-            <FolderCard
-              editable
-              title=""
-              onEnterPress={(newName) => {
-                if (!newName.trim()) {
-                  setIsAddingFolder(false);
-                  return;
-                }
-                postBookmarkFolder(newName).then((data) => {
-                  setTree((prev) => [...prev, data]);
-                  setActiveTreeId(data._id);
-                  setIsAddingFolder(false);
-                });
-              }}
-              onClick={() => {}}
-            />
-          ) : (
-            <button
-              onClick={() => setIsAddingFolder(true)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-dashed border-white/15 text-white/40 hover:text-white/70 text-sm transition-all duration-200"
-              title="New collection"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">New</span>
-            </button>
-          )}
+          {/* New folder button - triggers modal */}
+          <button
+            onClick={() => setIsAddingFolder(true)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-dashed border-white/15 text-white/40 hover:text-white/70 text-sm transition-all duration-200"
+            title="New collection"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span className="text-xs font-medium">New</span>
+          </button>
         </nav>
       )}
 
-      {/* ── Widgets ── */}
-      {allWidgets.length > 0 && (
+      {/* ── Widgets (Scoped to Active Folder) ── */}
+      {activeWidgets.length > 0 && (
         <section className="w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {allWidgets.map((widget, i) => (
+          <div
+            className={
+              activeWidgets.length === 1
+                ? "w-full"
+                : "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+            }
+          >
+            {activeWidgets.map((widget, i) => (
               <div
                 key={widget._id}
-                className="relative group"
+                className="relative group w-full"
                 style={{
                   animation: `fadeSlideUp 0.5s ease-out ${i * 80}ms both`,
                 }}
@@ -226,9 +207,13 @@ export default function Dashboard() {
                   <Plus className="rotate-45 w-3.5 h-3.5" />
                 </button>
 
-                <div className="transition-transform duration-300 hover:scale-[1.015]">
+                <div className="transition-transform duration-300 hover:scale-[1.005]">
                   {widget.widgetType === "LRT" ? (
-                    <LRTCard variant="default" />
+                    <div className="max-w-xl mx-auto w-full">
+                      <LRTCard variant="default" />
+                    </div>
+                  ) : widget.widgetType === "TRANSLATION" ? (
+                    <TranslationCard />
                   ) : (
                     <div className="w-full h-44 bg-white/[0.04] backdrop-blur-xl rounded-2xl flex flex-col items-center justify-center p-6 border border-white/[0.06] hover:bg-white/[0.07] transition-colors">
                       <span className="text-lg font-light tracking-wide text-white/70">
@@ -244,66 +229,69 @@ export default function Dashboard() {
       )}
 
       {/* ── Bookmarks Grid ── */}
-      <section className="w-full">
-        {bookmarks.length > 0 ? (
-          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-x-5 gap-y-7 justify-items-center">
-            {bookmarks.map((bookmark, i) => (
-              <BookmarkIcon
-                key={bookmark._id}
-                bookmark={bookmark}
-                index={i}
-                onEdit={() => setEditingBookmark(bookmark)}
-                onDelete={() =>
-                  onDelete(
-                    bookmark._id,
-                    bookmark.title,
-                    "link",
-                    bookmark.parentId,
-                  )
-                }
-              />
-            ))}
+      {/* Only show bookmarks if no widgets are present in this folder */}
+      {activeWidgets.length === 0 && (
+        <section className="w-full">
+          {bookmarks.length > 0 ? (
+            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-x-5 gap-y-7 justify-items-center">
+              {bookmarks.map((bookmark, i) => (
+                <BookmarkIcon
+                  key={bookmark._id}
+                  bookmark={bookmark}
+                  index={i}
+                  onEdit={() => setEditingBookmark(bookmark)}
+                  onDelete={() =>
+                    onDelete(
+                      bookmark._id,
+                      bookmark.title,
+                      "link",
+                      bookmark.parentId,
+                    )
+                  }
+                />
+              ))}
 
-            {/* Add link */}
-            <button
-              onClick={() => setIsAddingLink(true)}
-              className="group flex flex-col items-center gap-2.5 w-[88px] cursor-pointer"
-              title="Add a new bookmark"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-dashed border-white/15 flex items-center justify-center group-hover:bg-white/[0.08] group-hover:border-white/30 transition-all duration-250">
-                <Plus className="w-6 h-6 text-white/25 group-hover:text-white/60 transition-colors" />
+              {/* Add link */}
+              <button
+                onClick={() => setIsAddingLink(true)}
+                className="group flex flex-col items-center gap-2.5 w-[88px] cursor-pointer"
+                title="Add a new bookmark"
+              >
+                <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-dashed border-white/15 flex items-center justify-center group-hover:bg-white/[0.08] group-hover:border-white/30 transition-all duration-250">
+                  <Plus className="w-6 h-6 text-white/25 group-hover:text-white/60 transition-colors" />
+                </div>
+                <span className="text-[11px] font-medium text-white/25 group-hover:text-white/50 transition-colors">
+                  Add link
+                </span>
+              </button>
+            </div>
+          ) : (
+            /* Empty state */
+            <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                <FolderOpen className="w-7 h-7 text-white/20" />
               </div>
-              <span className="text-[11px] font-medium text-white/25 group-hover:text-white/50 transition-colors">
-                Add link
-              </span>
-            </button>
-          </div>
-        ) : (
-          /* Empty state */
-          <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
-              <FolderOpen className="w-7 h-7 text-white/20" />
+              <div>
+                <p className="text-sm font-medium text-white/40">
+                  {activeFolder
+                    ? `No links in "${activeFolder.title}" yet`
+                    : "No collection selected"}
+                </p>
+                <p className="text-xs text-white/25 mt-1">
+                  Add your first bookmark to get started
+                </p>
+              </div>
+              <button
+                onClick={() => setIsAddingLink(true)}
+                className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-sm text-white/60 hover:text-white/90 transition-all duration-200"
+              >
+                <Plus className="w-4 h-4" />
+                Add your first link
+              </button>
             </div>
-            <div>
-              <p className="text-sm font-medium text-white/40">
-                {activeFolder
-                  ? `No links in "${activeFolder.title}" yet`
-                  : "No collection selected"}
-              </p>
-              <p className="text-xs text-white/25 mt-1">
-                Add your first bookmark to get started
-              </p>
-            </div>
-            <button
-              onClick={() => setIsAddingLink(true)}
-              className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-sm text-white/60 hover:text-white/90 transition-all duration-200"
-            >
-              <Plus className="w-4 h-4" />
-              Add your first link
-            </button>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
+      )}
 
       {/* ── Link Modal ── */}
       {(editingBookmark || isAddingLink) && (
@@ -346,6 +334,16 @@ export default function Dashboard() {
           }}
         />
       )}
+
+      {/* ── Folder Modal ── */}
+      <FolderModal
+        isModalOpen={isAddingFolder}
+        setIsModalOpen={setIsAddingFolder}
+        onSuccess={(newFolder) => {
+          setTree((prev) => [...prev, newFolder]);
+          setActiveTreeId(newFolder._id);
+        }}
+      />
     </div>
   );
 }

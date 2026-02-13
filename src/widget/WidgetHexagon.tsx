@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { TrainFront, Clock, Trash2 } from "lucide-react";
+import { TrainFront, Clock, Trash2, Languages } from "lucide-react";
 import Modal from "./Modal";
 import LRTCard from "./LRTCard";
+import TranslationCard from "./TranslationCard";
 import { HEXAGON_DIMENSIONS, SVG_PATHS } from "@/constants";
 import type { BookmarkTreeType } from "@/interface";
 
@@ -69,7 +70,12 @@ export default function WidgetHexagon({
     }
   };
 
-  const Icon = widgetType === "LRT" ? TrainFront : Clock;
+  const Icon =
+    widgetType === "LRT"
+      ? TrainFront
+      : widgetType === "TRANSLATION"
+        ? Languages
+        : Clock;
 
   return (
     <>
@@ -147,10 +153,17 @@ export default function WidgetHexagon({
         )}
       </div>
 
-      <Modal isOpen={!!showModal} onClose={handleClose} title={title}>
+      <Modal
+        isOpen={!!showModal}
+        onClose={handleClose}
+        title={title}
+        size={widgetType === "TRANSLATION" ? "7xl" : "md"}
+      >
         <div className="flex justify-center items-center w-full">
           {widgetType === "LRT" ? (
             <LRTCard variant="minimal" />
+          ) : widgetType === "TRANSLATION" ? (
+            <TranslationCard />
           ) : (
             <div className="text-white/70">Widget content not available</div>
           )}
