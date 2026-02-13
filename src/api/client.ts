@@ -19,7 +19,6 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor - handle errors globally
 client.interceptors.response.use(
   (response) => response,
   async (error) => {
