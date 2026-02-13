@@ -40,7 +40,8 @@ export default function HoneyCombFavIcon({
 
   // const logoSrc = `https://favicon.vemetric.com/${hostname}`;
   const logoSrc = `https://scenic-start-node-ten.vercel.app/auth/favorite-icon?domain=${hostname}`;
-  const fallbackSrc = `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
+  const fallbackSrc = `https://favicon.vemetric.com/${hostname}`;
+  // const fallbackSrc = `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
 
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigation

@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
-import { Eye, EyeOff, ArrowLeft, Loader2, Check, AlertCircle } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  Loader2,
+  Check,
+  AlertCircle,
+} from "lucide-react";
 import { checkEmailExists, loginUser, registerUser } from "@/api";
 import { setDataToLocalStorage } from "@/utils";
 import { STORAGE_KEYS } from "@/constants";
@@ -44,20 +51,25 @@ const validators = {
 
   password: (password: string, isNewUser: boolean): string | null => {
     if (password.length < 8) return "Password must be at least 8 characters.";
-    
+
     if (isNewUser) {
-      if (!/[A-Z]/.test(password)) return "Password must contain an uppercase letter.";
-      if (!/[a-z]/.test(password)) return "Password must contain a lowercase letter.";
+      if (!/[A-Z]/.test(password))
+        return "Password must contain an uppercase letter.";
+      if (!/[a-z]/.test(password))
+        return "Password must contain a lowercase letter.";
       if (!/[0-9]/.test(password)) return "Password must contain a number.";
       if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
         return "Password must contain a special character.";
       }
     }
-    
+
     return null;
   },
 
-  confirmPassword: (password: string, confirmPassword: string): string | null => {
+  confirmPassword: (
+    password: string,
+    confirmPassword: string,
+  ): string | null => {
     if (password !== confirmPassword) {
       return "Passwords do not match.";
     }
@@ -66,16 +78,20 @@ const validators = {
 };
 
 // Password strength calculator
-function getPasswordStrength(password: string): { score: number; label: string; color: string } {
+function getPasswordStrength(password: string): {
+  score: number;
+  label: string;
+  color: string;
+} {
   let score = 0;
-  
+
   if (password.length >= 8) score++;
   if (password.length >= 12) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[a-z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) score++;
-  
+
   if (score <= 2) return { score: 1, label: "Weak", color: "bg-red-500" };
   if (score <= 4) return { score: 2, label: "Fair", color: "bg-yellow-500" };
   if (score <= 5) return { score: 3, label: "Good", color: "bg-blue-500" };
@@ -142,7 +158,7 @@ export default function KnowYourClient() {
             ]
           : []),
     ],
-    [emailExists]
+    [emailExists],
   );
 
   useEffect(() => {
@@ -154,19 +170,25 @@ export default function KnowYourClient() {
   const current = steps[step];
   if (!current) return null;
 
-  const isPassword = current.key === "password" || current.key === "confirmPassword";
-  const passwordStrength = current.key === "password" && !emailExists 
-    ? getPasswordStrength(values.password) 
-    : null;
+  const isPassword =
+    current.key === "password" || current.key === "confirmPassword";
+  const passwordStrength =
+    current.key === "password" && !emailExists
+      ? getPasswordStrength(values.password)
+      : null;
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = current.key === "email" 
-      ? e.target.value.toLowerCase().trim() 
-      : e.target.value;
-    
-    setValues((prev) => ({ ...prev, [current.key]: value }));
-    setError(null); // Clear error on input
-  }, [current.key]);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value =
+        current.key === "email"
+          ? e.target.value.toLowerCase().trim()
+          : e.target.value;
+
+      setValues((prev) => ({ ...prev, [current.key]: value }));
+      setError(null); // Clear error on input
+    },
+    [current.key],
+  );
 
   const goBack = useCallback(() => {
     if (step === 0 || loading) return;
@@ -185,19 +207,12 @@ export default function KnowYourClient() {
 
     try {
       if (emailExists) {
-        // Login flow
-        const { data } = await loginUser(values.email, values.password);
-        setDataToLocalStorage(STORAGE_KEYS.AUTH_TOKEN, data.token);
-        setDataToLocalStorage(STORAGE_KEYS.LOGIN_TIMESTAMP, Date.now());
+        await loginUser(values.email, values.password);
       } else {
-        // Registration flow
         await registerUser(values.name.trim(), values.email, values.password);
-        const { data } = await loginUser(values.email, values.password);
-        setDataToLocalStorage(STORAGE_KEYS.AUTH_TOKEN, data.token);
-        setDataToLocalStorage(STORAGE_KEYS.LOGIN_TIMESTAMP, Date.now());
+        await loginUser(values.email, values.password);
       }
 
-      // Clear sensitive data
       setValues({
         name: "",
         email: "",
@@ -205,7 +220,7 @@ export default function KnowYourClient() {
         confirmPassword: "",
       });
 
-      window.location.reload();
+      // window.location.reload();
     } catch (error: any) {
       console.error("Authentication error:", error);
 
@@ -218,7 +233,10 @@ export default function KnowYourClient() {
       } else if (!navigator.onLine) {
         setError("No internet connection. Please check your network.");
       } else {
-        setError(error.response?.data?.message || "Something went wrong. Please try again.");
+        setError(
+          error.response?.data?.message ||
+            "Something went wrong. Please try again.",
+        );
       }
     } finally {
       setLoading(false);
@@ -230,7 +248,7 @@ export default function KnowYourClient() {
     setError(null);
 
     const value = values[current.key].trim();
-    
+
     // Required field check
     if (!value) {
       return setError("This field is required.");
@@ -241,7 +259,7 @@ export default function KnowYourClient() {
       case "name": {
         const nameError = validators.name(values.name);
         if (nameError) return setError(nameError);
-        
+
         setDataToLocalStorage(STORAGE_KEYS.USER_NAME, values.name.trim());
         setStep(step + 1);
         break;
@@ -272,9 +290,12 @@ export default function KnowYourClient() {
       }
 
       case "password": {
-        const passwordError = validators.password(values.password, !emailExists);
+        const passwordError = validators.password(
+          values.password,
+          !emailExists,
+        );
         if (passwordError) return setError(passwordError);
-        
+
         if (step < steps.length - 1) {
           setStep(step + 1);
         } else {
@@ -284,9 +305,12 @@ export default function KnowYourClient() {
       }
 
       case "confirmPassword": {
-        const confirmError = validators.confirmPassword(values.password, values.confirmPassword);
+        const confirmError = validators.confirmPassword(
+          values.password,
+          values.confirmPassword,
+        );
         if (confirmError) return setError(confirmError);
-        
+
         await handleSubmit();
         break;
       }
@@ -309,10 +333,13 @@ export default function KnowYourClient() {
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent" />
-        
+
         {/* Floating orbs */}
         <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        />
       </div>
 
       {/* Main Content */}
@@ -321,22 +348,33 @@ export default function KnowYourClient() {
         <div className="backdrop-blur-2xl bg-white/5 border border-white/10 shadow-2xl rounded-3xl p-8 sm:p-10 flex flex-col items-center transition-all duration-500">
           {/* Header */}
           <div className="text-center mb-10 space-y-3">
-            <div className="text-6xl mb-3 animate-in zoom-in duration-500">{current.emoji}</div>
+            <div className="text-6xl mb-3 animate-in zoom-in duration-500">
+              {current.emoji}
+            </div>
             <h1 className="text-3xl font-bold tracking-tight text-white animate-in fade-in slide-in-from-bottom-3 duration-500">
               {current.text}
             </h1>
             {current.description && (
-              <p className="text-sm text-white/50 animate-in fade-in slide-in-from-bottom-3 duration-500" style={{ animationDelay: "100ms" }}>
+              <p
+                className="text-sm text-white/50 animate-in fade-in slide-in-from-bottom-3 duration-500"
+                style={{ animationDelay: "100ms" }}
+              >
                 {current.description}
               </p>
             )}
-            <div className="h-1 w-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto animate-in fade-in duration-500" style={{ animationDelay: "200ms" }} />
+            <div
+              className="h-1 w-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto animate-in fade-in duration-500"
+              style={{ animationDelay: "200ms" }}
+            />
           </div>
 
           {/* Form */}
           <div className="w-full space-y-5">
             {/* Input Field */}
-            <div className="relative group animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: "300ms" }}>
+            <div
+              className="relative group animate-in fade-in slide-in-from-bottom-4 duration-500"
+              style={{ animationDelay: "300ms" }}
+            >
               <input
                 ref={inputRef}
                 type={isPassword && !showPassword ? "password" : "text"}
@@ -345,7 +383,13 @@ export default function KnowYourClient() {
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 disabled={loading}
-                autoComplete={current.key === "email" ? "email" : current.key === "name" ? "name" : "off"}
+                autoComplete={
+                  current.key === "email"
+                    ? "email"
+                    : current.key === "name"
+                      ? "name"
+                      : "off"
+                }
                 autoFocus
                 aria-label={current.text}
                 aria-invalid={!!error}
@@ -384,10 +428,15 @@ export default function KnowYourClient() {
                     />
                   ))}
                 </div>
-                <p className={`text-xs text-center transition-colors ${
-                  passwordStrength.score >= 3 ? "text-green-400" : 
-                  passwordStrength.score >= 2 ? "text-yellow-400" : "text-red-400"
-                }`}>
+                <p
+                  className={`text-xs text-center transition-colors ${
+                    passwordStrength.score >= 3
+                      ? "text-green-400"
+                      : passwordStrength.score >= 2
+                        ? "text-yellow-400"
+                        : "text-red-400"
+                  }`}
+                >
                   Password strength: {passwordStrength.label}
                 </p>
               </div>
@@ -395,7 +444,7 @@ export default function KnowYourClient() {
 
             {/* Error Message */}
             {error && (
-              <div 
+              <div
                 id="error-message"
                 role="alert"
                 className="flex items-start gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-200 text-sm animate-in fade-in slide-in-from-top-2 duration-300"
@@ -406,7 +455,10 @@ export default function KnowYourClient() {
             )}
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-3 pt-2 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: "400ms" }}>
+            <div
+              className="flex items-center gap-3 pt-2 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              style={{ animationDelay: "400ms" }}
+            >
               {step > 0 && (
                 <button
                   onClick={goBack}
@@ -443,13 +495,16 @@ export default function KnowYourClient() {
         </div>
 
         {/* Step Indicator */}
-        <div className="mt-8 flex justify-center gap-2 animate-in fade-in duration-500" style={{ animationDelay: "500ms" }}>
+        <div
+          className="mt-8 flex justify-center gap-2 animate-in fade-in duration-500"
+          style={{ animationDelay: "500ms" }}
+        >
           {steps.map((_, i) => (
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all duration-500 ${
-                i === step 
-                  ? "w-8 bg-gradient-to-r from-blue-500 to-purple-500" 
+                i === step
+                  ? "w-8 bg-gradient-to-r from-blue-500 to-purple-500"
                   : i < step
                     ? "w-1.5 bg-white/40"
                     : "w-1.5 bg-white/10"
@@ -460,9 +515,25 @@ export default function KnowYourClient() {
         </div>
 
         {/* Helper Text */}
-        <p className="mt-6 text-center text-xs text-white/40 animate-in fade-in duration-500" style={{ animationDelay: "600ms" }}>
-          Press <kbd className="px-2 py-1 bg-white/10 rounded text-white/60">Enter</kbd> to continue
-          {step > 0 && <> or <kbd className="px-2 py-1 bg-white/10 rounded text-white/60">Esc</kbd> to go back</>}
+        <p
+          className="mt-6 text-center text-xs text-white/40 animate-in fade-in duration-500"
+          style={{ animationDelay: "600ms" }}
+        >
+          Press{" "}
+          <kbd className="px-2 py-1 bg-white/10 rounded text-white/60">
+            Enter
+          </kbd>{" "}
+          to continue
+          {step > 0 && (
+            <>
+              {" "}
+              or{" "}
+              <kbd className="px-2 py-1 bg-white/10 rounded text-white/60">
+                Esc
+              </kbd>{" "}
+              to go back
+            </>
+          )}
         </p>
       </div>
     </div>

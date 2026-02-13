@@ -1,20 +1,12 @@
-import { STORAGE_KEYS } from "@/constants";
-import {
-  getDataFromLocalStorage,
-  setDataToLocalStorage,
-  deleteDataFromLocalStorage,
-} from "@/utils";
 import axios from "axios";
 
 // Configuration
-const BASE_URL =
-  import.meta.env.REACT_APP_API_URL ||
-  "https://scenic-start-node-ten.vercel.app";
+const BASE_URL = "https://scenic-start-node-ten.vercel.app";
 const TIMEOUT = 30000;
-const STORAGE_KEY = STORAGE_KEYS.AUTH_TOKEN;
 
 // Create axios instance
 const client = axios.create({
+  withCredentials: true,
   baseURL: BASE_URL,
   timeout: TIMEOUT,
   headers: {
@@ -24,10 +16,6 @@ const client = axios.create({
 });
 
 client.interceptors.request.use((config) => {
-  const token = getDataFromLocalStorage(STORAGE_KEYS.AUTH_TOKEN);
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
   return config;
 });
 
@@ -36,41 +24,6 @@ client.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
-    // Handle 401 Unauthorized
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        // Try to refresh token
-        const refreshToken = getDataFromLocalStorage("refreshToken");
-
-        if (refreshToken) {
-          const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {
-            refreshToken,
-          });
-
-          // Save new tokens
-          setDataToLocalStorage(STORAGE_KEY, data.token);
-          if (data.refreshToken) {
-            setDataToLocalStorage("refreshToken", data.refreshToken);
-          }
-
-          // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${data.token}`;
-          return client(originalRequest);
-        }
-      } catch (refreshError) {
-        // Refresh failed, log out user
-        deleteDataFromLocalStorage(STORAGE_KEY);
-        deleteDataFromLocalStorage("refreshToken");
-
-        // Emit custom event for React to handle logout
-        window.dispatchEvent(new CustomEvent("auth:logout"));
-
-        return Promise.reject(refreshError);
-      }
-    }
 
     // Handle 429 Rate Limiting
     if (error.response?.status === 429) {

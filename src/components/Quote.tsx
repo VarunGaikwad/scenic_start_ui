@@ -17,21 +17,22 @@ function getToday(): string {
 
 function getLastFetchAttempt(): string | null {
   try {
-    return getDataFromLocalStorage("last_quote_fetch_attempt");
+    return getDataFromLocalStorage(STORAGE_KEYS.QUOTE_LAST_FETCH);
   } catch {
     return null;
   }
 }
 
 function setLastFetchAttempt() {
-  setDataToLocalStorage("last_quote_fetch_attempt", getToday());
+  setDataToLocalStorage(STORAGE_KEYS.QUOTE_LAST_FETCH, getToday());
 }
 
 function getStoredContent(
-  type: "quotes" | "shayari"
+  type: "quotes" | "shayari",
 ): ShayariQuoteResponse | null {
   try {
-    const storageKey = type === "quotes" ? STORAGE_KEYS.QUOTE_DATA : STORAGE_KEYS.SHAYARI_DATA;
+    const storageKey =
+      type === "quotes" ? STORAGE_KEYS.QUOTE_DATA : STORAGE_KEYS.SHAYARI_DATA;
     const raw = getDataFromLocalStorage(storageKey);
     if (!raw) return null;
 
@@ -53,7 +54,7 @@ function getStoredContent(
 export default function Quote() {
   const [currentType, setCurrentType] = useState<ContentType>(() => {
     const saved = getDataFromLocalStorage(STORAGE_KEYS.QUOTE_PREFERENCE);
-    return (saved === "quotes" || saved === "shayari") ? saved : "shayari";
+    return saved === "quotes" || saved === "shayari" ? saved : "shayari";
   });
 
   const [content, setContent] = useState<{ text: string; author: string }>({
@@ -71,7 +72,7 @@ export default function Quote() {
 
     async function loadContent() {
       const today = getToday();
-      
+
       // Check if we have fresh cached data for current type
       const cachedContent = getStoredContent(currentType);
       if (cachedContent && cachedContent.date === today) {
@@ -84,7 +85,7 @@ export default function Quote() {
       const shayariData = getStoredContent("shayari");
       const quotesData = getStoredContent("quotes");
       const lastFetchAttempt = getLastFetchAttempt();
-      
+
       const needsFetch =
         (!shayariData || shayariData.date !== today) &&
         (!quotesData || quotesData.date !== today) &&
@@ -98,9 +99,10 @@ export default function Quote() {
         } else {
           // We already tried fetching today but got no data
           setContent({
-            text: currentType === "quotes" 
-              ? "No quote available today. Check back tomorrow!" 
-              : "No shayari available today. Check back tomorrow!",
+            text:
+              currentType === "quotes"
+                ? "No quote available today. Check back tomorrow!"
+                : "No shayari available today. Check back tomorrow!",
             author: "—",
           });
         }
@@ -123,7 +125,9 @@ export default function Quote() {
         // Mark that we attempted to fetch today
         setLastFetchAttempt();
 
-        const shayariList = Array.isArray(shayariRes) ? shayariRes : [shayariRes];
+        const shayariList = Array.isArray(shayariRes)
+          ? shayariRes
+          : [shayariRes];
         const quoteList = Array.isArray(quoteRes) ? quoteRes : [quoteRes];
         const shayariItem = shayariList.length > 0 ? shayariList[0] : null;
         const quoteItem = quoteList.length > 0 ? quoteList[0] : null;
@@ -157,9 +161,10 @@ export default function Quote() {
         } else {
           // No data available, show placeholder but don't save it
           setContent({
-            text: currentType === "quotes" 
-              ? "No quote available today. Check back tomorrow!" 
-              : "No shayari available today. Check back tomorrow!",
+            text:
+              currentType === "quotes"
+                ? "No quote available today. Check back tomorrow!"
+                : "No shayari available today. Check back tomorrow!",
             author: "—",
           });
         }
@@ -168,10 +173,11 @@ export default function Quote() {
         setHasError(true);
 
         // Fallback to any cached data
-        const fallback = currentType === "quotes" 
-          ? (quotesData || shayariData)
-          : (shayariData || quotesData);
-          
+        const fallback =
+          currentType === "quotes"
+            ? quotesData || shayariData
+            : shayariData || quotesData;
+
         if (fallback) {
           setContent({
             text: fallback.text,
@@ -201,7 +207,8 @@ export default function Quote() {
     setIsFlipping(true);
 
     setTimeout(() => {
-      const newType: ContentType = currentType === "quotes" ? "shayari" : "quotes";
+      const newType: ContentType =
+        currentType === "quotes" ? "shayari" : "quotes";
       setCurrentType(newType);
       setDataToLocalStorage(STORAGE_KEYS.QUOTE_PREFERENCE, newType);
     }, UI_CONSTANTS.FLIP_HALFWAY_MS);
@@ -244,8 +251,8 @@ export default function Quote() {
       {/* Flip animation container */}
       <div
         className={`transition-all duration-500 transform ${
-          isFlipping 
-            ? "scale-95 opacity-0 blur-sm rotate-y-180" 
+          isFlipping
+            ? "scale-95 opacity-0 blur-sm rotate-y-180"
             : "scale-100 opacity-100 blur-0"
         }`}
       >
@@ -279,7 +286,10 @@ export default function Quote() {
 
       {/* Error indicator */}
       {hasError && (
-        <div className="absolute top-2 right-2 w-2 h-2 bg-yellow-500/50 rounded-full animate-pulse" title="Using cached content" />
+        <div
+          className="absolute top-2 right-2 w-2 h-2 bg-yellow-500/50 rounded-full animate-pulse"
+          title="Using cached content"
+        />
       )}
     </div>
   );

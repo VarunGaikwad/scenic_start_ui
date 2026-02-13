@@ -13,8 +13,8 @@ export const SVG_PATHS = {
 
 export const STORAGE_KEYS = {
   // Auth & User
-  AUTH_TOKEN: "scenic:v1:auth:token",
-  LOGIN_TIMESTAMP: "scenic:v1:auth:login_timestamp",
+  // AUTH_TOKEN: "scenic:v1:auth:token",
+  // LOGIN_TIMESTAMP: "scenic:v1:auth:login_timestamp",
   USER_NAME: "scenic:v1:user:name",
   USER_EMAIL: "scenic:v1:user:email",
 
@@ -40,6 +40,8 @@ export const STORAGE_KEYS = {
 
   // Background
   BACKGROUND_DATA: "scenic:v1:background:data",
+
+  QUOTE_LAST_FETCH: "scenic:v1:quote:last_fetch",
 };
 
 export const CACHE_DURATIONS = {

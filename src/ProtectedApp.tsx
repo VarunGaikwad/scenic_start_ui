@@ -2,38 +2,29 @@ import { useState, useEffect, useCallback } from "react";
 import { ScenicApp, KnowYourClient } from "@/pages";
 import { isMe } from "@/api";
 import { Background } from "./components";
-import { deleteDataFromLocalStorage, getDataFromLocalStorage } from "./utils";
-import { STORAGE_KEYS } from "./constants";
 
 export default function ProtectedApp() {
   const [loading, setLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState(() => {
-    return !!getDataFromLocalStorage(STORAGE_KEYS.AUTH_TOKEN);
-  });
+  const [authenticated, setAuthenticated] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const checkAuth = useCallback(async () => {
     setError(null);
+
     try {
-      const { status } = await isMe();
-      if (status === 200) {
+      const response = await isMe();
+      if (response.status === "active") {
         setAuthenticated(true);
-      } else if (status === 401) {
-        deleteDataFromLocalStorage(STORAGE_KEYS.AUTH_TOKEN);
+      } else {
         setAuthenticated(false);
       }
     } catch (error: any) {
       if (error.response?.status === 401) {
-        deleteDataFromLocalStorage(STORAGE_KEYS.AUTH_TOKEN);
         setAuthenticated(false);
       } else if (!navigator.onLine) {
-        setError("You're offline. Some features may be limited.");
-        const hasToken = !!localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-        setAuthenticated(hasToken);
+        setError("You're offline. Authentication cannot be verified.");
       } else {
         setError("Unable to verify authentication.");
-        const hasToken = !!localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-        setAuthenticated(hasToken);
       }
     } finally {
       setLoading(false);
@@ -44,12 +35,13 @@ export default function ProtectedApp() {
     let cancelled = false;
 
     const runCheck = async () => {
-      if (!cancelled) await checkAuth();
+      if (!cancelled) {
+        await checkAuth();
+      }
     };
 
     runCheck();
 
-    // Re-check every 5 minutes
     const interval = setInterval(
       () => {
         if (!cancelled) checkAuth();
@@ -57,7 +49,6 @@ export default function ProtectedApp() {
       5 * 60 * 1000,
     );
 
-    // Re-check when user returns to tab
     const handleFocus = () => {
       if (!cancelled) checkAuth();
     };
@@ -74,7 +65,6 @@ export default function ProtectedApp() {
   return (
     <Background>
       {loading ? (
-        // ✅ Proper loading state - no protected content shown
         <div className="flex items-center justify-center h-screen w-screen">
           <div className="text-center space-y-4">
             <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto" />

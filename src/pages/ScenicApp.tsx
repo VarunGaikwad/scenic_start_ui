@@ -26,7 +26,7 @@ export default function ScenicApp() {
       </header>
 
       {/* Main Content - Centered */}
-      <main className="absolute inset-0 flex flex-col items-center justify-start p-6 z-10 overflow-y-auto scrollbar-hide pt-24 pb-48">
+      <main className="absolute inset-0 flex flex-col items-center justify-start p-12 z-10 overflow-y-auto scrollbar-hide pt-0 pb-48">
         <div className="w-full max-w-5xl flex flex-col items-center gap-16">
           <div className="w-full max-w-2xl transform hover:scale-[1.01] transition-transform duration-500 z-50 sticky top-4">
             <SearchEngine />
