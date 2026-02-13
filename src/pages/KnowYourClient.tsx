@@ -328,11 +328,11 @@ export default function KnowYourClient() {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 font-inter text-white selection:bg-white/30">
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 font-inter text-white selection:bg-white/30">
       {/* Animated Background */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent" />
 
         {/* Floating orbs */}
         <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
@@ -363,7 +363,7 @@ export default function KnowYourClient() {
               </p>
             )}
             <div
-              className="h-1 w-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto animate-in fade-in duration-500"
+              className="h-1 w-16 bg-linear-to-r from-blue-500 to-purple-500 rounded-full mx-auto animate-in fade-in duration-500"
               style={{ animationDelay: "200ms" }}
             />
           </div>
@@ -449,7 +449,7 @@ export default function KnowYourClient() {
                 role="alert"
                 className="flex items-start gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-200 text-sm animate-in fade-in slide-in-from-top-2 duration-300"
               >
-                <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
+                <AlertCircle size={18} className="shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
             )}
@@ -474,7 +474,7 @@ export default function KnowYourClient() {
               <button
                 onClick={handleNext}
                 disabled={loading}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold h-14 rounded-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+                className="flex-1 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold h-14 rounded-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
               >
                 {loading ? (
                   <>
@@ -504,7 +504,7 @@ export default function KnowYourClient() {
               key={i}
               className={`h-1.5 rounded-full transition-all duration-500 ${
                 i === step
-                  ? "w-8 bg-gradient-to-r from-blue-500 to-purple-500"
+                  ? "w-8 bg-linear-to-r from-blue-500 to-purple-500"
                   : i < step
                     ? "w-1.5 bg-white/40"
                     : "w-1.5 bg-white/10"

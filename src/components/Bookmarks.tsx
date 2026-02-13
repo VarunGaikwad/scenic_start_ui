@@ -154,7 +154,7 @@ export default function Bookmarks() {
 
   return (
     <div className="flex-1 px-5 py-3">
-      <div className="flex gap-4">
+      <div className="flex gap-4 justify-center">
         {tree
           .filter((item) => item.type === "folder")
           .map(({ title, type, _id }) => (
@@ -204,7 +204,7 @@ export default function Bookmarks() {
                       });
                       return newTree;
                     });
-                    
+
                     // Re-fetch to be sure we have correct state including the moved item in new folder
                     // This avoids needing to pass the whole bookmark object in drag data
                     getBookmarkTree().then(setTree);

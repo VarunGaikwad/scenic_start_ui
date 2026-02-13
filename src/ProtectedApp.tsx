@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ScenicApp, KnowYourClient } from "@/pages";
 import { isMe } from "@/api";
-import { Background } from "./components";
+import { Background } from "@/components";
 
 export default function ProtectedApp() {
   const [loading, setLoading] = useState(true);

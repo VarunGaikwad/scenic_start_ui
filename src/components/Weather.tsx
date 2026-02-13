@@ -114,7 +114,7 @@ export default function Weather() {
 
   return (
     <div
-      className="group relative flex flex-col gap-4 px-6 py-5 rounded-3xl bg-black/30 backdrop-blur-xl border border-white/10 hover:bg-black/40 transition-all duration-300 shadow-2xl cursor-pointer select-none w-full max-w-[280px]"
+      className="group relative flex flex-col gap-4 px-6 py-5 rounded-3xl bg-black/30 backdrop-blur-xl border border-white/10 hover:bg-black/40 transition-all duration-300 shadow-2xl cursor-pointer select-none w-full max-w-70"
       onClick={() => fetchWeather(true)}
       title="Click to refresh weather"
     >
@@ -126,7 +126,7 @@ export default function Weather() {
           </span>
           <div className="flex items-center gap-1.5 text-xs text-white/60 font-medium mt-1">
             <MapPinned size={12} />
-            <span className="truncate max-w-[100px]">{info.location.name}</span>
+            <span className="truncate max-w-25">{info.location.name}</span>
           </div>
         </div>
 

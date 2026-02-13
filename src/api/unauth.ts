@@ -9,4 +9,6 @@ const loginUser = (email: string, password: string) =>
 const registerUser = (name: string, email: string, password: string) =>
   client.post("/unauth/register", { name, email, password });
 
-export { checkEmailExists, loginUser, registerUser };
+const logoutUser = () => client.post("/unauth/logout");
+
+export { checkEmailExists, loginUser, registerUser, logoutUser };
