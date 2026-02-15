@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Configuration
-const BASE_URL = "https://scenic-start-node-ten.vercel.app";
+const BASE_URL = "https://scenic-start-node-ten.vercel.app/api";
 const TIMEOUT = 30000;
 
 // Create axios instance

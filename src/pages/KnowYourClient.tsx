@@ -220,7 +220,9 @@ export default function KnowYourClient() {
         confirmPassword: "",
       });
 
-      // window.location.reload();
+      setTimeout(function () {
+        window.location.reload();
+      }, 1000);
     } catch (error: any) {
       console.error("Authentication error:", error);
 
