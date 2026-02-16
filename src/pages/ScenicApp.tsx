@@ -26,8 +26,11 @@ export default function ScenicApp() {
       </header>
 
       {/* Main Content - Centered */}
-      <main className="absolute inset-0 flex flex-col items-center justify-start px-6 z-10 overflow-y-auto scrollbar-hide pt-40 pb-64">
+      <main className="absolute inset-0 flex flex-col items-center justify-start px-6 z-10 overflow-y-auto scrollbar-hide pb-64">
         <div className="w-full max-w-6xl flex flex-col items-center gap-8">
+          {/* Add spacing to center the search initially */}
+          <div className="h-40" />
+
           <div className="w-full max-w-2xl transform hover:scale-[1.01] transition-transform duration-500 z-50 sticky top-4">
             <SearchEngine />
           </div>
