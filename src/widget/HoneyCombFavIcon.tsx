@@ -39,7 +39,7 @@ export default function HoneyCombFavIcon({
   }, [url]);
 
   // Use Google's reliable favicon service
-  const logoSrc = `https://scenic-start-node-ten.vercel.app/auth/favorite-icon?domain=${hostname}`;
+  const logoSrc = `https://scenic-start-node-ten.vercel.app/api/auth/favorite-icon?domain=${hostname}`;
   // Fallback to DuckDuckGo if needed, or maintain existing fallback
   const fallbackSrc = `https://icons.duckduckgo.com/ip3/${hostname}.ico`;
 

@@ -363,7 +363,7 @@ function BookmarkIcon({
   onDelete: () => void;
 }) {
   const hostname = bookmark.url ? new URL(bookmark.url).hostname : "";
-  const faviconUrl = `https://scenic-start-node-ten.vercel.app/auth/favorite-icon?domain=${hostname}`;
+  const faviconUrl = `https://scenic-start-node-ten.vercel.app/api/auth/favorite-icon?domain=${hostname}`;
 
   return (
     <div

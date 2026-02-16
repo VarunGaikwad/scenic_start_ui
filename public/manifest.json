@@ -8,12 +8,22 @@
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
+  "key": "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDTAiswhadMAWz+duGHRuXNWLxXX1jCqRt4Eu0ltzp+UdSg2JOH4yoB9T9v5oS/5n6l0DL6zBNiCsKbGCQ+t7vxSbMtgwqAb0UIZmyaX4jVozUcCWe6TmGz/dVgJHZidq67aVYvNd+fG856/Uz8BQO7qXcWRHYpGVfni6jxs0ArqBB5jju5zALEh+++2b1XpVil/UEE8Mof7McKsB5HHOkzRX2n0q9gSPY9GvfF+/uiWpZdgUK+cE4uNUblLQJay0EO9c4Bda8A6AltmHk8FHgsC84S+ccwA8zgMxpXNuLULaFMosxQsmaH/Nw9Xg8xPvrP9jgwZQdCRIXVqEpYECt/AgMBAAECggEAAREZEs0PhCIwYOD3pu1u1VObhX2P6fwHjYXa+RPXZzLBYRwh3XqtMwarDsUa6rV0R8upAPztztMVxMmhypy3MIhvhXgMzOAYeJW7+tPSJ0evSbhVHpYC3HFuFhGudN+mESspKmKarNKWf/yuhPT+3dYE1MdSfvFdMRMoWYB51JP/Qj0y7QtRia2RDOLOKaluGWJluPSEwVHYK9knUKViuTu7styoJVEQIqC/1XJynnxz00B871QCkPcggidwcvEgsMhSO8NeByTCmPdRg+i/cEpJLllW1gmdRO5mt+VyK2GahOzGo+c0COKZLRFQDQxCsMk5mElRVbSxIvET7NXtgQKBgQDtSlPFR4AwrgPKNBscs2BrvXOdxT2mGVRhDKXOIp94yHi81HptZ6rfN9li1RYetWzCpwGck8i6ITQ2qbgUUAO+Ds3b0W7urWQivBMmqiShWWIvZOCjo8vzTaainxS69JGNa8RRkHKhtDH0rCLkIYFfOTqVvgWG+duuskbwAtwV4QKBgQDjpVh3zcsdCUz7/C0TqTg7mmAXIR+Il+cV4Cvs4og6XpmN4wmzT8OZk8SSupiMXWvIm/yr+YGLDkV2QrVdhbKtTrLAKJvGHNJlGiYsiPohOWDislUBAMuzjJ9IGd+ohaTpO43yPg1Wh5XNjkcuY3WyeXAjFPOf8VatLw/QWvutXwKBgGDRVuTDi7ZRChLSt806Ezlij23sMH85DoialHxK/C5X/YtuVpWVGs8BBp2gu+nDtKCna6zrT5dCPP+guA7xptVBTRVHmq+f55+UhWvdOBztT3Zu/olGJ80Z/ceUiOzPJSRCuFNfUKZR06A1K/dRBGxJ+XFnmvG7uLrK2s7LG+mBAoGBAIhjiyKUQMoPxXj/uH4cF53WOxYAeWUcJY58tbSCcL4P6Y4R5cDx3C4KU27ZrwYB/s69bmAW599JWKKnCwSSUt/007G/Yr0KjZ+XUCHEm6AGQZ7w227zbBgR+2h2YAMWtxwp2zy0osciCsWSJeGMI3sfuOi7587/CEBQfvgFWt6fAoGAJi2IElULQ3k0pycEYCDMv0pMwpf5XEjHqmaoIKPx4/D9l2OlroUIPJHGtd8/Nf0HS2gmybXWj8ncdETtwZ303k7C1L3QJ3A69b8yT8JiI2LzRUZcTLbq+F1nI+VREiIC+V2DP6UUpFk5cQ1/BPho/x5awHjYvUSqlHXCwCmACK8=",
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; frame-src https://www.youtube.com/"
+    "extension_pages": "script-src 'self'; object-src 'self'; frame-src https://omni-vox-ten.vercel.app/"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "icons": {
-    "16": "icon.png",
-    "32": "icon.png",
-    "48": "icon.png"
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   }
 }
