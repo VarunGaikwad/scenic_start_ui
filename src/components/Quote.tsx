@@ -257,13 +257,13 @@ export default function Quote() {
         }`}
       >
         {/* Quote/Shayari text */}
-        <p className="text-sm md:text-base font-medium text-white/90 leading-relaxed font-serif tracking-wide text-center min-h-[3rem] flex items-center justify-center">
+        <p className="text-sm md:text-base font-medium text-white/90 leading-relaxed font-serif tracking-wide text-center min-h-12 flex items-center justify-center">
           <span className="drop-shadow-sm">"{content.text}"</span>
         </p>
 
         {/* Author attribution */}
         <div className="mt-4 flex items-center justify-start gap-2">
-          <div className="h-px w-6 bg-gradient-to-r from-white/20 to-transparent group-hover:w-12 transition-all duration-300" />
+          <div className="h-px w-6 bg-linear-to-r from-white/20 to-transparent group-hover:w-12 transition-all duration-300" />
           <p className="text-xs font-medium text-white/50 uppercase tracking-widest group-hover:text-white/70 transition-colors">
             {content.author}
           </p>
@@ -272,7 +272,7 @@ export default function Quote() {
 
       {/* Type badge (shows on hover) */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
-        <span className="px-3 py-1 bg-gradient-to-r from-black/90 to-black/80 text-[10px] uppercase tracking-widest text-white/70 rounded-full border border-white/20 backdrop-blur-xl shadow-lg">
+        <span className="px-3 py-1 bg-linear-to-r from-black/90 to-black/80 text-[10px] uppercase tracking-widest text-white/70 rounded-full border border-white/20 backdrop-blur-xl shadow-lg">
           {currentType}
         </span>
       </div>

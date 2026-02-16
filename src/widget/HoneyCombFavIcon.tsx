@@ -78,8 +78,8 @@ export default function HoneyCombFavIcon({
     >
       <a
         href={url}
-        target="_blank"
         rel="noopener noreferrer"
+        target="_self"
         className="inline-flex hover:opacity-90 transition-opacity duration-200 focus:outline-none rounded-lg"
         style={{ width: size, height: size }}
         aria-label={`Open ${title}`}

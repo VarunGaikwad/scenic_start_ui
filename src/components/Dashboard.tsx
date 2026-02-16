@@ -215,7 +215,7 @@ export default function Dashboard() {
                   ) : widget.widgetType === "TRANSLATION" ? (
                     <TranslationCard />
                   ) : (
-                    <div className="w-full h-44 bg-white/[0.04] backdrop-blur-xl rounded-2xl flex flex-col items-center justify-center p-6 border border-white/[0.06] hover:bg-white/[0.07] transition-colors">
+                    <div className="w-full h-44 bg-white/4 backdrop-blur-xl rounded-2xl flex flex-col items-center justify-center p-6 border border-white/6 hover:bg-white/[0.07] transition-colors">
                       <span className="text-lg font-light tracking-wide text-white/70">
                         {widget.title}
                       </span>
@@ -254,10 +254,10 @@ export default function Dashboard() {
               {/* Add link */}
               <button
                 onClick={() => setIsAddingLink(true)}
-                className="group flex flex-col items-center gap-2.5 w-[88px] cursor-pointer"
+                className="group flex flex-col items-center gap-2.5 w-22 cursor-pointer"
                 title="Add a new bookmark"
               >
-                <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-dashed border-white/15 flex items-center justify-center group-hover:bg-white/[0.08] group-hover:border-white/30 transition-all duration-250">
+                <div className="w-16 h-16 rounded-2xl bg-white/4 border border-dashed border-white/15 flex items-center justify-center group-hover:bg-white/8 group-hover:border-white/30 transition-all duration-250">
                   <Plus className="w-6 h-6 text-white/25 group-hover:text-white/60 transition-colors" />
                 </div>
                 <span className="text-[11px] font-medium text-white/25 group-hover:text-white/50 transition-colors">
@@ -268,7 +268,7 @@ export default function Dashboard() {
           ) : (
             /* Empty state */
             <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-white/4 border border-white/6 flex items-center justify-center">
                 <FolderOpen className="w-7 h-7 text-white/20" />
               </div>
               <div>
@@ -283,7 +283,7 @@ export default function Dashboard() {
               </div>
               <button
                 onClick={() => setIsAddingLink(true)}
-                className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-sm text-white/60 hover:text-white/90 transition-all duration-200"
+                className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/6 hover:bg-white/10 border border-white/8 text-sm text-white/60 hover:text-white/90 transition-all duration-200"
               >
                 <Plus className="w-4 h-4" />
                 Add your first link
@@ -367,15 +367,17 @@ function BookmarkIcon({
 
   return (
     <div
-      className="group flex flex-col items-center gap-2.5 w-[88px] cursor-pointer relative"
+      className="group flex flex-col items-center gap-2.5 w-22 cursor-pointer relative"
       style={{
         animation: `fadeSlideUp 0.4s ease-out ${index * 40}ms both`,
       }}
     >
       {/* Icon tile */}
       <div
-        className="relative w-16 h-16 rounded-2xl bg-white/[0.05] border border-white/[0.07] shadow-sm flex items-center justify-center group-hover:bg-white/[0.09] group-hover:shadow-lg group-hover:scale-105 transition-all duration-250 overflow-hidden"
-        onClick={() => window.open(bookmark.url, "_blank")}
+        className="relative w-16 h-16 rounded-2xl bg-white/5 border border-white/[0.07] shadow-sm flex items-center justify-center group-hover:bg-white/9 group-hover:shadow-lg group-hover:scale-105 transition-all duration-250 overflow-hidden"
+        onClick={() => {
+          location.assign(bookmark.url);
+        }}
         draggable
         onDragStart={(e) => {
           e.dataTransfer.setData(
@@ -425,7 +427,7 @@ function BookmarkIcon({
       <span
         className="text-[11px] font-medium text-white/50 text-center leading-tight w-full truncate group-hover:text-white/80 transition-colors"
         title={bookmark.title}
-        onClick={() => window.open(bookmark.url, "_blank")}
+        onClick={() => window.open(bookmark.url)}
       >
         {bookmark.title}
       </span>

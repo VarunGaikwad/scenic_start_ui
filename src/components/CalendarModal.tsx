@@ -128,8 +128,8 @@ export default function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-200">
-      <div className="bg-black/80 backdrop-blur-md border border-white/10 rounded-3xl shadow-2xl w-full max-w-4xl h-[600px] flex overflow-hidden">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-200">
+      <div className="bg-black/80 backdrop-blur-md border border-white/10 rounded-3xl shadow-2xl w-full max-w-4xl h-150 flex overflow-hidden">
         {/* Left: Calendar Grid */}
         <div className="flex-1 p-8 border-r border-white/10 flex flex-col">
           <div className="flex items-center justify-between mb-8">

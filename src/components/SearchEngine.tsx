@@ -90,7 +90,7 @@ export default function SearchEngine() {
   const openSearch = (query: string) => {
     setIsSearching(true);
     const searchURL = ENGINES[currentEngine].query + encodeURIComponent(query);
-    window.open(searchURL, "_blank", "noopener,noreferrer");
+    window.open(searchURL, "", "noopener,noreferrer");
 
     setTimeout(() => {
       setSearchText("");
@@ -104,7 +104,7 @@ export default function SearchEngine() {
       setActiveWidgetId(item._id);
       setIsSearching(false); // Close search dropdown
     } else if (item.url) {
-      window.open(item.url, "_blank", "noopener,noreferrer");
+      location.assign(item.url);
       setSearchText("");
       setSuggestions([]);
       setSelectedIndex(-1);

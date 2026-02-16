@@ -89,9 +89,7 @@ export default function LRTCard({ variant = "default" }: Props) {
     return (
       <div
         className={`w-full rounded-2xl animate-pulse ${
-          variant === "default"
-            ? "p-5 bg-white/[0.04] border border-white/[0.06]"
-            : ""
+          variant === "default" ? "p-5 bg-white/4 border border-white/6" : ""
         }`}
       >
         <div className="flex items-center gap-2.5 mb-4">
@@ -99,8 +97,8 @@ export default function LRTCard({ variant = "default" }: Props) {
           <div className="h-4 w-28 rounded bg-white/10" />
         </div>
         <div className="space-y-3">
-          <div className="h-14 rounded-xl bg-white/[0.04]" />
-          <div className="h-14 rounded-xl bg-white/[0.04]" />
+          <div className="h-14 rounded-xl bg-white/4" />
+          <div className="h-14 rounded-xl bg-white/4" />
         </div>
       </div>
     );
@@ -110,7 +108,7 @@ export default function LRTCard({ variant = "default" }: Props) {
     <div
       className={`w-full select-none ${
         variant === "default"
-          ? "rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] hover:bg-white/[0.06] transition-all duration-300 shadow-lg overflow-hidden"
+          ? "rounded-2xl bg-white/4 backdrop-blur-xl border border-white/6 hover:bg-white/6 transition-all duration-300 shadow-lg overflow-hidden"
           : ""
       }`}
     >
@@ -131,7 +129,7 @@ export default function LRTCard({ variant = "default" }: Props) {
       <div className="px-4 pb-3">
         <button
           onClick={toggleSource}
-          className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.05] transition-all duration-200 group"
+          className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/4 hover:bg-white/[0.07] border border-white/5 transition-all duration-200 group"
         >
           <span className="text-xs font-medium text-white/70">
             {selectedRoute?.from}
@@ -160,7 +158,7 @@ export default function LRTCard({ variant = "default" }: Props) {
                       : isSoon
                         ? "bg-amber-500/10 border-amber-500/15"
                         : "bg-blue-500/10 border-blue-500/15"
-                    : "bg-white/[0.02] border-white/[0.04]"
+                    : "bg-white/2 border-white/4"
                 }`}
               >
                 {/* Times */}
