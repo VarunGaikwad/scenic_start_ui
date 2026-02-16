@@ -11,22 +11,6 @@ type ShayariQuoteResponse = {
   date: string;
 };
 
-function getToday(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function getLastFetchAttempt(): string | null {
-  try {
-    return getDataFromLocalStorage(STORAGE_KEYS.QUOTE_LAST_FETCH);
-  } catch {
-    return null;
-  }
-}
-
-function setLastFetchAttempt() {
-  setDataToLocalStorage(STORAGE_KEYS.QUOTE_LAST_FETCH, getToday());
-}
-
 function getStoredContent(
   type: "quotes" | "shayari",
 ): ShayariQuoteResponse | null {
@@ -66,51 +50,10 @@ export default function Quote() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
-  // Load content based on current type
   useEffect(() => {
     let cancelled = false;
 
     async function loadContent() {
-      const today = getToday();
-
-      // Check if we have fresh cached data for current type
-      const cachedContent = getStoredContent(currentType);
-      if (cachedContent && cachedContent.date === today) {
-        setContent({ text: cachedContent.text, author: cachedContent.author });
-        setIsLoading(false);
-        return;
-      }
-
-      // Check if we need to fetch fresh data
-      const shayariData = getStoredContent("shayari");
-      const quotesData = getStoredContent("quotes");
-      const lastFetchAttempt = getLastFetchAttempt();
-
-      const needsFetch =
-        (!shayariData || shayariData.date !== today) &&
-        (!quotesData || quotesData.date !== today) &&
-        lastFetchAttempt !== today;
-
-      if (!needsFetch) {
-        // We have today's data OR we already tried fetching today
-        const currentData = getStoredContent(currentType);
-        if (currentData) {
-          setContent({ text: currentData.text, author: currentData.author });
-        } else {
-          // We already tried fetching today but got no data
-          setContent({
-            text:
-              currentType === "quotes"
-                ? "No quote available today. Check back tomorrow!"
-                : "No shayari available today. Check back tomorrow!",
-            author: "—",
-          });
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      // Fetch fresh data
       setIsLoading(true);
       setHasError(false);
 
@@ -122,61 +65,47 @@ export default function Quote() {
 
         if (cancelled) return;
 
-        // Mark that we attempted to fetch today
-        setLastFetchAttempt();
-
         const shayariList = Array.isArray(shayariRes)
           ? shayariRes
           : [shayariRes];
         const quoteList = Array.isArray(quoteRes) ? quoteRes : [quoteRes];
-        const shayariItem = shayariList.length > 0 ? shayariList[0] : null;
-        const quoteItem = quoteList.length > 0 ? quoteList[0] : null;
 
-        // Only save to localStorage if we have valid data
-        if (shayariItem && shayariItem.text && shayariItem.author) {
-          const shayariPayload: ShayariQuoteResponse = {
-            text: shayariItem.text,
-            author: shayariItem.author,
-            date: today,
-          };
-          setDataToLocalStorage(STORAGE_KEYS.SHAYARI_DATA, shayariPayload);
+        const shayariItem = shayariList[0] ?? null;
+        const quoteItem = quoteList[0] ?? null;
+
+        // Save both to localStorage (no date restriction anymore)
+        if (shayariItem?.text && shayariItem?.author) {
+          setDataToLocalStorage(STORAGE_KEYS.SHAYARI_DATA, shayariItem);
         }
 
-        if (quoteItem && quoteItem.text && quoteItem.author) {
-          const quotePayload: ShayariQuoteResponse = {
-            text: quoteItem.text,
-            author: quoteItem.author,
-            date: today,
-          };
-          setDataToLocalStorage(STORAGE_KEYS.QUOTE_DATA, quotePayload);
+        if (quoteItem?.text && quoteItem?.author) {
+          setDataToLocalStorage(STORAGE_KEYS.QUOTE_DATA, quoteItem);
         }
 
-        // Set the content for current type
-        const currentData = getStoredContent(currentType);
-        if (currentData) {
+        // Set current type content
+        const currentData = currentType === "quotes" ? quoteItem : shayariItem;
+
+        if (
+          currentData &&
+          typeof currentData.text === "string" &&
+          typeof currentData.author === "string"
+        ) {
           setContent({
             text: currentData.text,
             author: currentData.author,
           });
         } else {
-          // No data available, show placeholder but don't save it
           setContent({
-            text:
-              currentType === "quotes"
-                ? "No quote available today. Check back tomorrow!"
-                : "No shayari available today. Check back tomorrow!",
+            text: `No ${currentType} available.`,
             author: "—",
           });
         }
       } catch (error) {
-        console.error("Failed to fetch daily content:", error);
+        console.error("Failed to fetch content:", error);
         setHasError(true);
 
-        // Fallback to any cached data
-        const fallback =
-          currentType === "quotes"
-            ? quotesData || shayariData
-            : shayariData || quotesData;
+        // Fallback to cached content
+        const fallback = getStoredContent(currentType);
 
         if (fallback) {
           setContent({
@@ -199,7 +128,7 @@ export default function Quote() {
     return () => {
       cancelled = true;
     };
-  }, [currentType]); // Re-run when type changes
+  }, [currentType]);
 
   const handleFlip = useCallback(() => {
     if (isFlipping || isLoading) return;
