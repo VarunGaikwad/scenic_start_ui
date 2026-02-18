@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import Modal from "./Modal";
-import { postBookmarkLink, putBookmark } from "@/api";
+import { postBookmarkLink, putBookmark, postEmbedWidget } from "@/api";
 import type { BookmarkTreeType } from "@/interface";
 
 const MAX_TITLE_LENGTH = 100;
@@ -32,6 +32,7 @@ export default function LinkModal({
   const [touched, setTouched] = useState({ title: false, url: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
+  const [linkType, setLinkType] = useState<"link" | "embed">("link");
 
   // Reset form when modal opens/closes or initial values change
   useEffect(() => {
@@ -39,7 +40,9 @@ export default function LinkModal({
       setTitle(initialTitle);
       setUrl(initialUrl);
       setTouched({ title: false, url: false });
+      setTouched({ title: false, url: false });
       setApiError("");
+      setLinkType("link");
     }
   }, [isModalOpen, initialTitle, initialUrl]);
 
@@ -114,11 +117,20 @@ export default function LinkModal({
         };
       } else {
         if (!activeTreeId) throw new Error("Parent ID required for new link");
-        result = await postBookmarkLink(
-          title.trim(),
-          normalizedUrl,
-          activeTreeId,
-        );
+
+        if (linkType === "embed") {
+          result = await postEmbedWidget(
+            title.trim(),
+            normalizedUrl,
+            activeTreeId,
+          );
+        } else {
+          result = await postBookmarkLink(
+            title.trim(),
+            normalizedUrl,
+            activeTreeId,
+          );
+        }
       }
 
       onSuccess(result);
@@ -140,6 +152,36 @@ export default function LinkModal({
       size="sm"
     >
       <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+        {
+          /* Type Selector */
+          !isEditMode && (
+            <div className="flex gap-6 border-b border-white/10 pb-1 mb-4">
+              <button
+                type="button"
+                onClick={() => setLinkType("link")}
+                className={`text-sm font-medium pb-2 -mb-1.5 transition-colors relative ${
+                  linkType === "link"
+                    ? "text-blue-400 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-blue-400"
+                    : "text-zinc-400 hover:text-zinc-300"
+                }`}
+              >
+                Bookmark
+              </button>
+              <button
+                type="button"
+                onClick={() => setLinkType("embed")}
+                className={`text-sm font-medium pb-2 -mb-1.5 transition-colors relative ${
+                  linkType === "embed"
+                    ? "text-blue-400 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-blue-400"
+                    : "text-zinc-400 hover:text-zinc-300"
+                }`}
+              >
+                Embed Website
+              </button>
+            </div>
+          )
+        }
+
         {/* Title */}
         <div>
           <div className="flex justify-between items-center mb-1">
@@ -216,6 +258,29 @@ export default function LinkModal({
             </p>
           )}
         </div>
+
+        {/* Embed Preview */}
+        {linkType === "embed" && url && !urlError && (
+          <div className="space-y-2">
+            <label className="text-sm text-zinc-400">Embed Preview</label>
+            <div className="w-full h-48 rounded-lg bg-zinc-900 border border-white/10 overflow-hidden relative group">
+              <iframe
+                src={normalizeUrl(url)}
+                className="w-full h-full border-none opacity-50 group-hover:opacity-100 transition-opacity"
+                title="Preview"
+              />
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-xs text-white/50 bg-black/20 group-hover:bg-transparent transition-colors">
+                <span className="bg-black/60 px-2 py-1 rounded backdrop-blur-sm group-hover:opacity-0 transition-opacity">
+                  Check if content loads here
+                </span>
+              </div>
+            </div>
+            <p className="text-[10px] text-zinc-500">
+              Note: If the preview is blank or shows an error, this website
+              likely prevents embedding.
+            </p>
+          </div>
+        )}
 
         {apiError && (
           <p className="text-xs text-red-400 text-center" role="alert">

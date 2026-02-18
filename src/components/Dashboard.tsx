@@ -1,4 +1,4 @@
-import { LinkModal, FolderCard, TranslationCard, FolderModal } from "@/widget";
+import { LinkModal, FolderCard, FolderModal, EmbedWidget } from "@/widget";
 import LRTCard from "@/widget/LRTCard";
 import { Plus, Pencil, Trash2, FolderOpen } from "lucide-react";
 import { STORAGE_KEYS } from "@/constants";
@@ -119,10 +119,20 @@ export default function Dashboard() {
 
   const activeFolder = tree.find((folder) => folder._id === activeTreeId);
   const children = activeFolder?.children || [];
-  const bookmarks = children.filter((c) => c.type !== "widget");
+  // Collect widgets: items with type="widget" items OR items with widget:// URI
+  const activeWidgets = children.filter(
+    (c) =>
+      c.type === "widget" ||
+      c.widgetType === "EMBED" ||
+      (c.url && c.url.startsWith("widget://")),
+  );
 
-  // Collect widgets only from the ACTIVE folder
-  const activeWidgets = children.filter((c) => c.type === "widget");
+  const bookmarks = children.filter(
+    (c) =>
+      c.type !== "widget" &&
+      c.widgetType !== "EMBED" &&
+      (!c.url || !c.url.startsWith("widget://")),
+  );
 
   const folders = tree.filter((item) => item.type === "folder");
 
@@ -212,8 +222,17 @@ export default function Dashboard() {
                     <div className="max-w-xl mx-auto w-full">
                       <LRTCard variant="default" />
                     </div>
-                  ) : widget.widgetType === "TRANSLATION" ? (
-                    <TranslationCard />
+                  ) : widget.widgetType === "EMBED" ||
+                    (widget.url && widget.url.startsWith("widget://EMBED/")) ? (
+                    <EmbedWidget
+                      url={
+                        widget.url && widget.url.startsWith("widget://EMBED/")
+                          ? decodeURIComponent(
+                              widget.url.replace("widget://EMBED/", ""),
+                            )
+                          : widget.url || ""
+                      }
+                    />
                   ) : (
                     <div className="w-full h-44 bg-white/4 backdrop-blur-xl rounded-2xl flex flex-col items-center justify-center p-6 border border-white/6 hover:bg-white/[0.07] transition-colors">
                       <span className="text-lg font-light tracking-wide text-white/70">

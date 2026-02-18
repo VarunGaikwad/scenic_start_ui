@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import Modal from "./Modal";
-import { postBookmarkFolder, postBookmarkWidget } from "@/api";
+import { postBookmarkFolder, postBookmarkWidget, postEmbedWidget } from "@/api";
 import type { BookmarkTreeType } from "@/interface";
 
 const MAX_TITLE_LENGTH = 50;
@@ -19,13 +19,19 @@ export default function FolderModal({
   const [folderName, setFolderName] = useState("");
   const [hasWidget, setHasWidget] = useState(false);
   const [widgetType, setWidgetType] = useState("LRT");
+  const [embedUrl, setEmbedUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
 
   const isFormValid = useMemo(() => {
     const trimmed = folderName.trim();
-    return trimmed.length > 0 && trimmed.length <= MAX_TITLE_LENGTH;
-  }, [folderName]);
+    const isValidName =
+      trimmed.length > 0 && trimmed.length <= MAX_TITLE_LENGTH;
+    if (hasWidget && widgetType === "EMBED") {
+      return isValidName && embedUrl.trim().length > 0;
+    }
+    return isValidName;
+  }, [folderName, hasWidget, widgetType, embedUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,13 +46,23 @@ export default function FolderModal({
 
       // 2. Add Widget if selected
       if (hasWidget) {
-        const widget = await postBookmarkWidget(
-          folderName.trim(), // Use folder name as widget title for consistency
-          widgetType,
-          folder._id,
-        );
-        // Manually update the local folder object to include the new widget
-        folder.children = [widget];
+        if (widgetType === "EMBED") {
+          const widget = await postEmbedWidget(
+            folderName.trim(),
+            embedUrl,
+            folder._id,
+          );
+          // Manually update the local folder object to include the new widget
+          folder.children = [widget];
+        } else {
+          const widget = await postBookmarkWidget(
+            folderName.trim(), // Use folder name as widget title for consistency
+            widgetType,
+            folder._id,
+          );
+          // Manually update the local folder object to include the new widget
+          folder.children = [widget];
+        }
       }
 
       onSuccess(folder);
@@ -56,6 +72,7 @@ export default function FolderModal({
       setFolderName("");
       setHasWidget(false);
       setWidgetType("LRT");
+      setEmbedUrl("");
     } catch (error) {
       console.error(error);
       setApiError("Failed to create folder. Please try again.");
@@ -134,8 +151,34 @@ export default function FolderModal({
                 className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm text-white border border-white/10 outline-none focus:border-blue-500/60"
               >
                 <option value="LRT">LRT Card</option>
-                <option value="TRANSLATION">Translation Card</option>
+                <option value="LRT">LRT Card</option>
+                <option value="EMBED">Embed Website</option>
               </select>
+
+              {/* Embed URL Input */}
+              {widgetType === "EMBED" && (
+                <div className="mt-3">
+                  <label
+                    htmlFor="embed-url"
+                    className="text-xs text-zinc-500 block mb-1"
+                  >
+                    Website URL
+                  </label>
+                  <input
+                    id="embed-url"
+                    type="url"
+                    placeholder="https://example.com"
+                    value={embedUrl}
+                    onChange={(e) => setEmbedUrl(e.target.value)}
+                    className="w-full rounded-lg bg-zinc-900 px-3 py-2 text-sm text-white border border-white/10 outline-none focus:border-blue-500/60"
+                    required
+                  />
+                  <p className="text-[10px] text-zinc-500 mt-1">
+                    Note: Some websites may block embedding. Use the "Add Link"
+                    button to check preview if unsure.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

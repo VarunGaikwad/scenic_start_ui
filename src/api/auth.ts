@@ -220,6 +220,23 @@ export const postBookmarkWidget = async (
   return data;
 };
 
+export const postEmbedWidget = async (
+  title: string,
+  url: string,
+  parentId?: string | null,
+): Promise<BookmarkTreeType> => {
+  const safeUrl = `widget://EMBED/${encodeURIComponent(url)}`;
+  const { data } = await client.post<BookmarkTreeType>(`${PATH}/bookmark`, {
+    type: "widget",
+    title,
+    url: safeUrl,
+    widgetType: "EMBED",
+    parentId: parentId ?? null,
+  });
+  return data;
+  return data;
+};
+
 // ==================== UPDATE ====================
 
 export const putBookmark = async (
