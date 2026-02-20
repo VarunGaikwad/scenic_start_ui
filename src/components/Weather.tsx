@@ -26,30 +26,35 @@ export default function Weather() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check for geolocation permission on mount
+  // Attempt to get user location on mount
   useEffect(() => {
     if (!navigator.geolocation) return;
 
-    navigator.permissions
-      ?.query({ name: "geolocation" })
-      .then((status) => {
-        if (status.state === "granted") {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              const { latitude, longitude } = pos.coords;
-              const newCoords = { lat: latitude, lon: longitude };
-              setCoords(newCoords);
-              setDataToLocalStorage(STORAGE_KEYS.COORDS, newCoords);
-            },
-            (error) => {
-              console.warn("Geolocation error:", error);
-            },
-          );
-        }
-      })
-      .catch((error) => {
-        console.warn("Permission query error:", error);
-      });
+    // Check if we already have coords in storage
+    const storedCoords = getDataFromLocalStorage(STORAGE_KEYS.COORDS) as {
+      lat: number;
+      lon: number;
+    } | null;
+
+    if (storedCoords) {
+      setCoords(storedCoords);
+      return;
+    }
+
+    // Request position
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const newCoords = { lat: latitude, lon: longitude };
+        console.log("Got location:", newCoords);
+        setCoords(newCoords);
+        setDataToLocalStorage(STORAGE_KEYS.COORDS, newCoords);
+      },
+      (error) => {
+        console.warn("Geolocation denied or error:", error);
+      },
+      { timeout: 10000, maximumAge: 60000 },
+    );
   }, []);
 
   // Fetch weather with cache check
@@ -114,51 +119,54 @@ export default function Weather() {
 
   return (
     <div
-      className="group relative flex flex-col gap-4 px-6 py-5 rounded-3xl bg-black/30 backdrop-blur-xl border border-white/10 hover:bg-black/40 transition-all duration-300 shadow-2xl cursor-pointer select-none w-full max-w-70"
+      className="group relative flex flex-col gap-5 px-6 py-5 rounded-3xl bg-black/30 backdrop-blur-xl border border-white/10 hover:bg-black/40 transition-all duration-300 shadow-2xl cursor-pointer select-none w-full min-w-[340px]"
       onClick={() => fetchWeather(true)}
       title="Click to refresh weather"
     >
-      {/* Top Section: Icon + Main Temp */}
+      {/* Top Section: Location & Status */}
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
-          <span className="text-4xl font-bold leading-none text-white tracking-tight drop-shadow-lg">
-            {Math.round(info.temperature.current)}°
-          </span>
-          <div className="flex items-center gap-1.5 text-xs text-white/60 font-medium mt-1">
+          <div className="flex items-center gap-1.5 text-xs text-white/50 font-medium uppercase tracking-wider">
             <MapPinned size={12} />
-            <span className="truncate max-w-25">{info.location.name}</span>
+            <span className="truncate max-w-[140px]">{info.location.name}</span>
           </div>
+          <span className="text-lg font-medium text-white/90 mt-0.5">
+            {info.weather.description.charAt(0).toUpperCase() +
+              info.weather.description.slice(1)}
+          </span>
         </div>
-
         <div className="relative">
-          <img
-            src={`https://openweathermap.org/img/wn/${info.weather.icon}@2x.png`}
-            alt={info.weather.description}
-            className="w-16 h-16 object-contain drop-shadow-md -my-2"
-          />
           <RefreshCw
             size={14}
-            className={`absolute top-0 right-0 text-white/50 opacity-0 group-hover:opacity-100 transition-opacity ${
-              isLoading ? "animate-spin opacity-100" : ""
+            className={`text-white/30 transition-opacity ${
+              isLoading
+                ? "animate-spin opacity-100"
+                : "opacity-0 group-hover:opacity-100"
             }`}
           />
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="h-px w-full bg-white/10" />
+      {/* Middle Section: Big Temp & Icon */}
+      <div className="flex items-center justify-between">
+        <span className="text-6xl font-bold leading-none text-white tracking-tighter drop-shadow-xl">
+          {Math.round(info.temperature.current)}°
+        </span>
+        <img
+          src={`https://openweathermap.org/img/wn/${info.weather.icon}@4x.png`}
+          alt={info.weather.description}
+          className="w-24 h-24 object-contain drop-shadow-2xl -my-6 -mr-4"
+        />
+      </div>
 
       {/* Bottom Section: Grid of Details */}
-      <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+      <div className="grid grid-cols-3 gap-y-3 gap-x-2 pt-2 border-t border-white/10">
+        <DetailItem
+          label="Feels Like"
+          value={`${Math.round(info.temperature.feels_like)}°`}
+        />
         <DetailItem label="Wind" value={`${Math.round(info.wind.speed)} m/s`} />
         <DetailItem label="Humidity" value={`${info.humidity}%`} />
-        <DetailItem label="Pressure" value={`${info.pressure} hPa`} />
-        <DetailItem
-          label="Visibility"
-          value={
-            info.visibility ? `${(info.visibility / 1000).toFixed(1)} km` : "—"
-          }
-        />
       </div>
     </div>
   );

@@ -151,7 +151,6 @@ export default function FolderModal({
                 className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm text-white border border-white/10 outline-none focus:border-blue-500/60"
               >
                 <option value="LRT">LRT Card</option>
-                <option value="LRT">LRT Card</option>
                 <option value="EMBED">Embed Website</option>
               </select>
 

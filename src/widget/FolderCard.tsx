@@ -74,14 +74,14 @@ export default function FolderCard({
   };
 
   const baseClasses =
-    "group relative flex items-center justify-center px-6 py-2.5 rounded-full transition-all duration-300 ease-out select-none cursor-pointer border";
+    "group relative flex items-center justify-center px-5 py-2 rounded-xl transition-all duration-300 ease-out select-none cursor-pointer border backdrop-blur-sm";
 
   const activeClasses = isActive
-    ? "bg-white/20 border-white/40 shadow-[0_0_15px_rgba(255,255,255,0.2)] text-white scale-105"
-    : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20 hover:text-white";
+    ? "bg-white/15 border-white/30 shadow-[0_0_20px_rgba(255,255,255,0.15)] text-white scale-105 font-semibold"
+    : "bg-black/20 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/20 hover:text-white hover:scale-105";
 
   const dragClasses = isDragOver
-    ? "ring-2 ring-blue-400 ring-offset-2 ring-offset-transparent scale-105"
+    ? "ring-2 ring-blue-400 ring-offset-2 ring-offset-transparent scale-105 bg-blue-500/20"
     : "";
 
   return (
@@ -105,12 +105,12 @@ export default function FolderCard({
             }
             setIsEditing(false);
           }}
-          className="bg-transparent outline-none text-center w-full text-sm font-medium"
+          className="bg-transparent outline-none text-center w-full text-sm font-medium placeholder-white/20"
           placeholder="Folder name"
         />
       ) : (
         <span
-          className="text-sm font-medium"
+          className="text-sm tracking-wide"
           onDoubleClick={() => !editable && setIsEditing(true)}
         >
           {title || "New Folder"}
@@ -123,10 +123,10 @@ export default function FolderCard({
             e.stopPropagation();
             onDelete();
           }}
-          className="absolute -top-1 -right-1 p-1 bg-red-500/80 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600 shadow-sm"
+          className="absolute -top-1.5 -right-1.5 p-1 bg-red-500 rounded-full text-white opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-600 shadow-lg scale-0 group-hover:scale-100"
           title="Delete Folder"
         >
-          <Trash2 size={10} />
+          <Trash2 size={10} strokeWidth={3} />
         </button>
       )}
     </div>

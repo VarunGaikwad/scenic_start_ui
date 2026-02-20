@@ -9,7 +9,7 @@ import { Search, ExternalLink } from "lucide-react";
 import { getDataFromLocalStorage, setDataToLocalStorage } from "@/utils";
 import { STORAGE_KEYS } from "@/constants";
 import type { BookmarkTreeType } from "@/interface";
-import { WidgetHexagon } from "@/widget";
+import { Modal, LRTCard, EmbedWidget } from "@/widget";
 
 interface Engine {
   name: string;
@@ -197,6 +197,8 @@ export default function SearchEngine() {
     return () => window.removeEventListener("keydown", handleGlobalKeyPress);
   }, []);
 
+  const activeWidget = allBookmarks.find((b) => b._id === activeWidgetId);
+
   return (
     <div className="relative w-full max-w-2xl mx-auto z-50">
       <div className="w-full bg-black/40 backdrop-blur-md flex items-center rounded-full p-2.5 px-5 gap-3 border border-white/10 shadow-lg focus-within:bg-black/60 focus-within:border-white/20 transition-all">
@@ -233,7 +235,7 @@ export default function SearchEngine() {
       </div>
 
       {suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-black/80 backdrop-blur-3xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 z-60">
+        <div className="absolute bottom-full left-0 right-0 mb-2 bg-black/80 backdrop-blur-3xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200 z-60">
           <div className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider border-b border-white/5">
             Bookmark Matches
           </div>
@@ -289,21 +291,37 @@ export default function SearchEngine() {
           </ul>
         </div>
       )}
-      {/* Hidden widgets manager to show modals when activated via search */}
-      <div className="hidden">
-        {allBookmarks
-          .filter((b) => b.type === "widget")
-          .map((widget) => (
-            <WidgetHexagon
-              key={widget._id}
-              {...widget}
-              isOpen={activeWidgetId === widget._id}
-              onClose={() => setActiveWidgetId(null)}
-              // Read-only in search view, so no delete/edit needed
-              isDeletable={false}
-            />
-          ))}
-      </div>
+
+      {/* Replaced hidden WidgetHexagon list with direct Modal */}
+      {activeWidget && (
+        <Modal
+          isOpen={!!activeWidgetId}
+          onClose={() => setActiveWidgetId(null)}
+          title={activeWidget.title}
+          size={activeWidget.widgetType === "TRANSLATION" ? "7xl" : "md"}
+        >
+          <div className="flex justify-center items-center w-full">
+            {activeWidget.widgetType === "LRT" ? (
+              <LRTCard variant="minimal" />
+            ) : activeWidget.widgetType === "EMBED" ||
+              (activeWidget.url &&
+                activeWidget.url.startsWith("widget://EMBED/")) ? (
+              <EmbedWidget
+                url={
+                  activeWidget.url &&
+                  activeWidget.url.startsWith("widget://EMBED/")
+                    ? decodeURIComponent(
+                        activeWidget.url.replace("widget://EMBED/", ""),
+                      )
+                    : activeWidget.url || ""
+                }
+              />
+            ) : (
+              <div className="text-white/70">Widget content not available</div>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

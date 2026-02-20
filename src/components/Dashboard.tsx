@@ -1,6 +1,12 @@
-import { LinkModal, FolderCard, FolderModal, EmbedWidget } from "@/widget";
+import {
+  LinkModal,
+  FolderCard,
+  FolderModal,
+  EmbedWidget,
+  BookmarkIcon,
+} from "@/widget";
 import LRTCard from "@/widget/LRTCard";
-import { Plus, Pencil, Trash2, FolderOpen } from "lucide-react";
+import { Plus, FolderOpen } from "lucide-react";
 import { STORAGE_KEYS } from "@/constants";
 import { getDataFromLocalStorage, setDataToLocalStorage } from "@/utils";
 import { deleteBookmark, getBookmarkTree, putBookmark } from "@/api";
@@ -137,7 +143,7 @@ export default function Dashboard() {
   const folders = tree.filter((item) => item.type === "folder");
 
   return (
-    <div className="w-full flex flex-col gap-10 font-sans text-white pb-20">
+    <div className="w-full flex flex-col gap-6 font-sans text-white pb-8">
       {/* ── Folder Tabs ── */}
       {folders.length > 0 && (
         <nav className="flex items-center gap-2 flex-wrap px-1">
@@ -173,11 +179,11 @@ export default function Dashboard() {
           {/* New folder button - triggers modal */}
           <button
             onClick={() => setIsAddingFolder(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-dashed border-white/15 text-white/40 hover:text-white/70 text-sm transition-all duration-200"
+            className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-black/20 border border-white/5 text-white/50 hover:bg-white/10 hover:border-white/20 hover:text-white backdrop-blur-sm transition-all duration-300 ease-out hover:scale-105"
             title="New collection"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span className="text-xs font-medium">New</span>
+            <span className="text-sm tracking-wide">New</span>
           </button>
         </nav>
       )}
@@ -363,98 +369,6 @@ export default function Dashboard() {
           setActiveTreeId(newFolder._id);
         }}
       />
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Bookmark Icon – App-style with contextual actions
-   ───────────────────────────────────────────── */
-function BookmarkIcon({
-  bookmark,
-  index,
-  onEdit,
-  onDelete,
-}: {
-  bookmark: BookmarkTreeType;
-  index: number;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const hostname = bookmark.url ? new URL(bookmark.url).hostname : "";
-  const faviconUrl = `https://scenic-start-node-ten.vercel.app/api/auth/favorite-icon?domain=${hostname}`;
-
-  return (
-    <div
-      className="group flex flex-col items-center gap-2.5 w-22 cursor-pointer relative"
-      style={{
-        animation: `fadeSlideUp 0.4s ease-out ${index * 40}ms both`,
-      }}
-    >
-      {/* Icon tile */}
-      <div
-        className="relative w-16 h-16 rounded-2xl bg-white/5 border border-white/[0.07] shadow-sm flex items-center justify-center group-hover:bg-white/9 group-hover:shadow-lg group-hover:scale-105 transition-all duration-250 overflow-hidden"
-        onClick={() => {
-          location.assign(bookmark.url);
-        }}
-        draggable
-        onDragStart={(e) => {
-          e.dataTransfer.setData(
-            "application/json",
-            JSON.stringify({ id: bookmark._id, type: "bookmark" }),
-          );
-        }}
-      >
-        <img
-          src={faviconUrl}
-          alt={bookmark.title}
-          className="w-8 h-8 rounded-md object-contain"
-          loading="lazy"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.onerror = null;
-            target.src = `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
-          }}
-        />
-
-        {/* Action overlay */}
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center gap-3">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
-            }}
-            className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 transition-colors"
-            title="Edit"
-          >
-            <Pencil className="w-3.5 h-3.5 text-white/90" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="p-1.5 rounded-lg bg-red-500/30 hover:bg-red-500/50 transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="w-3.5 h-3.5 text-red-300" />
-          </button>
-        </div>
-      </div>
-
-      {/* Title */}
-      <span
-        className="text-[11px] font-medium text-white/50 text-center leading-tight w-full truncate group-hover:text-white/80 transition-colors"
-        title={bookmark.title}
-        onClick={() => window.open(bookmark.url)}
-      >
-        {bookmark.title}
-      </span>
-
-      {/* Hostname subtitle - visible on hover */}
-      <span className="text-[9px] text-white/20 -mt-1.5 truncate w-full text-center opacity-0 group-hover:opacity-100 transition-opacity">
-        {hostname}
-      </span>
     </div>
   );
 }

@@ -10,46 +10,48 @@ import {
 
 export default function ScenicApp() {
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row font-inter overflow-hidden text-xs relative select-none">
+    <div className="relative h-screen w-full overflow-hidden text-xs select-none font-inter text-white">
+      {/* Background layer */}
       <div className="absolute inset-0 z-0">
         <Background />
       </div>
 
-      {/* Header Elements */}
-      <header className="absolute top-0 left-0 w-full p-6 flex justify-between items-start z-20 pointer-events-none">
-        <div className="pointer-events-auto">
+      {/* Floating Header Components */}
+      <header className="absolute top-0 left-0 w-full p-6 flex justify-between items-start z-50 pointer-events-none">
+        <div className="pointer-events-auto hover:scale-105 transition-transform duration-300">
           <DigitalClock />
         </div>
-        <div className="pointer-events-auto">
-          <Weather />
+        <div className="pointer-events-auto hover:scale-105 transition-transform duration-300">
+          <Quote />
         </div>
       </header>
 
-      {/* Main Content - Centered */}
-      <main className="absolute inset-0 flex flex-col items-center justify-start px-6 z-10 overflow-y-auto scrollbar-hide pb-64">
-        <div className="w-full max-w-6xl flex flex-col items-center gap-8">
-          {/* Add spacing to center the search initially */}
-          <div className="h-40" />
-
-          <div className="w-full max-w-2xl transform hover:scale-[1.01] transition-transform duration-500 z-50 sticky top-4">
-            <SearchEngine />
-          </div>
-
-          <div className="w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150 z-0">
+      {/* Main Content Area - Scrollable */}
+      {/* z-10 ensures it's above background but below z-50 header/footer */}
+      {/* py-32 ensures content starts below header and ends above footer */}
+      {/* Main Content Area - Scrollable */}
+      {/* z-10 ensures it's above background but below z-50 header/footer */}
+      {/* pb-48 ensures content ends well above the bottom fixed search bar */}
+      <main className="absolute inset-0 z-10 overflow-y-auto scrollbar-hide pt-60 md:pt-48 lg:pt-32 xl:pt-28 pb-48 px-4 md:px-12 flex flex-col items-center min-h-screen">
+        <div className="w-full max-w-7xl flex flex-col items-center gap-12 flex-1 justify-center">
+          {/* Dashboard Grid */}
+          <div className="w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
             <Dashboard />
           </div>
         </div>
       </main>
 
-      {/* Footer Elements */}
-      <footer className="absolute bottom-0 left-0 w-full p-6 z-20 pointer-events-none">
-        {/* Quote Widget - Bottom Left */}
-        <div className="absolute bottom-6 left-6 pointer-events-auto">
-          <Quote />
-        </div>
+      {/* Fixed Bottom Search Bar */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 z-50 pointer-events-auto transform hover:scale-[1.01] transition-transform duration-500">
+        <SearchEngine />
+      </div>
 
-        {/* Calendar Widget - Bottom Right */}
-        <div className="absolute bottom-6 right-6 pointer-events-auto">
+      {/* Floating Footer Components */}
+      <footer className="absolute bottom-0 left-0 w-full p-6 flex justify-between items-end z-50 pointer-events-none gap-8">
+        <div className="pointer-events-auto hover:scale-105 transition-transform duration-300">
+          <Weather />
+        </div>
+        <div className="pointer-events-auto hover:scale-105 transition-transform duration-300 hidden md:block">
           <CalendarWidget />
         </div>
       </footer>
