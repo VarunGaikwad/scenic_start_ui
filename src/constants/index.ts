@@ -31,6 +31,7 @@ export const STORAGE_KEYS = {
   QUOTE_LAST_FETCH: "scenic:v1:quote:last_fetch",
 
   LRT_SOURCE: "scenic:v1:lrt:source",
+  LRT_DESTINATION: "scenic:v1:lrt:destination",
 
   LAST_AUTH_TIMESTAMP: "scenic:v1:last_auth_timestamp",
 };

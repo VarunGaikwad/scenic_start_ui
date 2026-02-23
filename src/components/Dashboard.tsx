@@ -4,8 +4,8 @@ import {
   FolderModal,
   EmbedWidget,
   BookmarkIcon,
+  LRTSchedule,
 } from "@/widget";
-import LRTCard from "@/widget/LRTCard";
 import { Plus, FolderOpen } from "lucide-react";
 import { STORAGE_KEYS } from "@/constants";
 import { getDataFromLocalStorage, setDataToLocalStorage } from "@/utils";
@@ -146,7 +146,7 @@ export default function Dashboard() {
     <div className="w-full flex flex-col gap-6 font-sans text-white pb-8">
       {/* ── Folder Tabs ── */}
       {folders.length > 0 && (
-        <nav className="flex items-center gap-2 flex-wrap px-1">
+        <nav className="flex items-center gap-2 flex-wrap px-1 pt-12 md:pt-12">
           {folders.map(({ title, type, _id }) => (
             <div key={_id} className="relative group">
               <FolderCard
@@ -226,7 +226,7 @@ export default function Dashboard() {
                 <div className="transition-transform duration-300 hover:scale-[1.005]">
                   {widget.widgetType === "LRT" ? (
                     <div className="max-w-xl mx-auto w-full">
-                      <LRTCard variant="default" />
+                      <LRTSchedule />
                     </div>
                   ) : widget.widgetType === "EMBED" ||
                     (widget.url && widget.url.startsWith("widget://EMBED/")) ? (
