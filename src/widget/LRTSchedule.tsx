@@ -7,10 +7,13 @@ import {
   ArrowLeftRight,
   ChevronDown,
   Check,
+  Footprints,
 } from "lucide-react";
 import { STORAGE_KEYS } from "@/constants";
 
-const WALK_BUFFER = 15;
+const DEFAULT_WALK_BUFFER = 15;
+const MIN_WALK_BUFFER = 0;
+const MAX_WALK_BUFFER = 60;
 
 const toMinutes = (time: string) => {
   const [h, m] = time.split(":").map(Number);
@@ -18,11 +21,10 @@ const toMinutes = (time: string) => {
   return h * 60 + m;
 };
 
-const todayDate = () => new Date().toISOString().split("T")[0];
-
-const leaveByTime = (departure: string) => {
+const todayDate = () => new Date().toLocaleDateString("en-US");
+const leaveByTime = (departure: string, walkBuffer: number) => {
   const [h, m] = departure.split(":").map(Number);
-  const totalMinutes = h * 60 + m - WALK_BUFFER;
+  const totalMinutes = h * 60 + m - walkBuffer;
   const lh = Math.floor(totalMinutes / 60) % 24;
   const lm = totalMinutes % 60;
   return `${String(lh).padStart(2, "0")}:${String(lm).padStart(2, "0")}`;
@@ -100,6 +102,70 @@ function StationDropdown({
   );
 }
 
+function WalkBufferControl({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [inputVal, setInputVal] = useState(String(value));
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const commit = () => {
+    const parsed = parseInt(inputVal, 10);
+    if (!isNaN(parsed)) {
+      onChange(Math.min(MAX_WALK_BUFFER, Math.max(MIN_WALK_BUFFER, parsed)));
+    } else {
+      setInputVal(String(value));
+    }
+    setEditing(false);
+  };
+
+  useEffect(() => {
+    if (editing) inputRef.current?.select();
+  }, [editing]);
+
+  // Keep inputVal in sync if value changes externally
+  useEffect(() => {
+    if (!editing) setInputVal(String(value));
+  }, [value, editing]);
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <Footprints className="w-3 h-3 text-white/25 shrink-0" />
+      {editing ? (
+        <input
+          ref={inputRef}
+          type="number"
+          min={MIN_WALK_BUFFER}
+          max={MAX_WALK_BUFFER}
+          value={inputVal}
+          onChange={(e) => setInputVal(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commit();
+            if (e.key === "Escape") {
+              setInputVal(String(value));
+              setEditing(false);
+            }
+          }}
+          className="w-8 text-center text-[10px] font-semibold text-white/60 bg-white/8 border border-white/15 rounded-md outline-none py-0.5 tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+        />
+      ) : (
+        <button
+          onClick={() => setEditing(true)}
+          className="text-[10px] text-white/20 tabular-nums hover:text-white/50 transition-colors"
+          title="Click to change walk time"
+        >
+          {value} min walk
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function LRTSchedule() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -110,6 +176,14 @@ export default function LRTSchedule() {
   const [destination, setDestination] = useState<string>(
     () => localStorage.getItem(STORAGE_KEYS.LRT_DESTINATION) ?? "",
   );
+  const [walkBuffer, setWalkBuffer] = useState<number>(() => {
+    const stored = localStorage.getItem(STORAGE_KEYS.LRT_WALK_BUFFER);
+    if (stored !== null) {
+      const parsed = parseInt(stored, 10);
+      if (!isNaN(parsed)) return parsed;
+    }
+    return DEFAULT_WALK_BUFFER;
+  });
   const [schedule, setSchedule] = useState<Record<string, string[]> | null>(
     null,
   );
@@ -155,6 +229,11 @@ export default function LRTSchedule() {
     localStorage.setItem(STORAGE_KEYS.LRT_DESTINATION, v);
   };
 
+  const handleWalkBufferChange = (v: number) => {
+    setWalkBuffer(v);
+    localStorage.setItem(STORAGE_KEYS.LRT_WALK_BUFFER, String(v));
+  };
+
   const swapStations = () => {
     handleOriginChange(destination);
     handleDestinationChange(origin);
@@ -180,25 +259,26 @@ export default function LRTSchedule() {
     const originTimes = schedule[keys[0]];
     const destTimes = schedule[keys[keys.length - 1]];
     if (!originTimes || !destTimes) return [];
-
-    const arrivalAtStation = currentMinutes + WALK_BUFFER;
+    const arrivalAtStation = currentMinutes + walkBuffer;
     const valid: { departure: string; arrival: string; leaveIn: number }[] = [];
 
     for (let i = 0; i < originTimes.length; i++) {
       const dep = originTimes[i];
       const arr = destTimes[i];
-      if (dep === "…" || arr === "…") continue;
+
+      if (dep === "…" || arr === "…" || dep === "ﾚ" || arr === "ﾚ") continue;
+
       if (toMinutes(dep) >= arrivalAtStation) {
         valid.push({
           departure: dep,
           arrival: arr,
-          leaveIn: toMinutes(dep) - WALK_BUFFER - currentMinutes,
+          leaveIn: toMinutes(dep) - walkBuffer - currentMinutes,
         });
       }
       if (valid.length === 3) break;
     }
     return valid;
-  }, [schedule, currentMinutes]);
+  }, [schedule, currentMinutes, walkBuffer]);
 
   const nextTrain = upcomingTrips[0];
   const isUrgent = nextTrain && nextTrain.leaveIn <= 0;
@@ -319,7 +399,7 @@ export default function LRTSchedule() {
                           : "text-white/80"
                     }`}
                   >
-                    {leaveByTime(nextTrain.departure)}
+                    {leaveByTime(nextTrain.departure, walkBuffer)}
                   </span>
                 </div>
 
@@ -363,7 +443,7 @@ export default function LRTSchedule() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-white/20 tabular-nums">
-                    leave {leaveByTime(trip.departure)}
+                    leave {leaveByTime(trip.departure, walkBuffer)}
                   </span>
                   <span className="text-xs tabular-nums text-white/25">
                     in {trip.leaveIn}m
@@ -377,9 +457,10 @@ export default function LRTSchedule() {
 
       {/* Footer */}
       <div className="flex items-center justify-between px-4 pb-3">
-        <span className="text-[10px] text-white/20">
-          {WALK_BUFFER} min walk included
-        </span>
+        <WalkBufferControl
+          value={walkBuffer}
+          onChange={handleWalkBufferChange}
+        />
         <span className="text-[10px] text-white/20 tabular-nums">
           {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </span>

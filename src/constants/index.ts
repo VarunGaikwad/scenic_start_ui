@@ -32,6 +32,7 @@ export const STORAGE_KEYS = {
 
   LRT_SOURCE: "scenic:v1:lrt:source",
   LRT_DESTINATION: "scenic:v1:lrt:destination",
+  LRT_WALK_BUFFER: "scenic:v1:lrt:walk_buffer",
 
   LAST_AUTH_TIMESTAMP: "scenic:v1:last_auth_timestamp",
 };
