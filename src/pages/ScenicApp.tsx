@@ -1,5 +1,4 @@
 import {
-  Background,
   Dashboard,
   DigitalClock,
   Quote,
@@ -11,11 +10,6 @@ import {
 export default function ScenicApp() {
   return (
     <div className="relative h-screen w-full overflow-hidden text-xs select-none font-inter text-white">
-      {/* Background layer */}
-      <div className="absolute inset-0 z-0">
-        <Background />
-      </div>
-
       {/* Floating Header Components */}
       <header className="absolute top-0 left-0 w-full p-6 flex justify-between items-start z-50 pointer-events-none">
         <div className="pointer-events-auto hover:scale-105 transition-transform duration-300">

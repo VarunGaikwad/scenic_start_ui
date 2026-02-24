@@ -1,13 +1,8 @@
 import { getBackgroundImage } from "@/api";
-import { STORAGE_KEYS } from "@/constants";
-import type { CachedImage, ImageResponseType } from "@/interface";
-import { useEffect, useState } from "react";
+import type { ImageResponseType } from "@/interface";
+import { useEffect, useRef, useState } from "react";
 
-const CACHE_KEY = STORAGE_KEYS.BACKGROUND_DATA;
-
-function getToday(): string {
-  return new Date().toISOString().slice(0, 10);
-}
+const SLIDESHOW_INTERVAL = 30_000; // 30 seconds
 
 function preloadMedia(src: string, type: "image" | "video"): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -54,77 +49,55 @@ export default function Background({
     null,
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [isFading, setIsFading] = useState(false);
+  const cancelledRef = useRef(false);
+  const isFetchingRef = useRef(false);
+
+  async function fetchAndSetBackground() {
+    if (isFetchingRef.current || cancelledRef.current) return;
+    isFetchingRef.current = true;
+
+    try {
+      const data = await getBackgroundImage();
+      await preloadMedia(data.image_url, data.media_type);
+
+      if (cancelledRef.current) return;
+
+      // Trigger fade-out, swap, then fade-in
+      setIsFading(true);
+      setTimeout(() => {
+        if (cancelledRef.current) return;
+        setImageObject(data);
+        setIsFading(false);
+        setIsLoading(false);
+      }, 500); // match CSS transition duration
+    } catch (error) {
+      console.error("Failed to load background:", error);
+      if (!cancelledRef.current) {
+        setImageObject(FALLBACK_BACKGROUND);
+        setIsLoading(false);
+      }
+    } finally {
+      isFetchingRef.current = false;
+    }
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    let cancelled = false;
+    cancelledRef.current = false;
 
-    async function loadDailyBackground() {
-      const today = getToday();
+    // Initial load
+    fetchAndSetBackground();
 
-      // Try cache first
-      try {
-        const cached = localStorage.getItem(CACHE_KEY);
-        if (cached) {
-          const parsed: CachedImage = JSON.parse(cached);
-
-          if (parsed.date === today && parsed.image_url) {
-            // Show cached immediately
-            if (!cancelled) setImageObject(parsed);
-
-            // Preload in background
-            preloadMedia(parsed.image_url, parsed.media_type)
-              .catch(console.warn)
-              .finally(() => {
-                if (!cancelled) setIsLoading(false);
-              });
-            return;
-          }
-        }
-      } catch (error) {
-        console.warn("Cache corrupted, clearing:", error);
-        localStorage.removeItem(CACHE_KEY);
-      }
-
-      // Fetch new background
-      try {
-        const data = await getBackgroundImage();
-
-        // Preload before showing
-        await preloadMedia(data.image_url, data.media_type);
-
-        const payload: CachedImage = { ...data, date: today };
-        localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
-
-        if (!cancelled) {
-          setImageObject(data);
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("Failed to load background:", error);
-
-        // Fallback to old cache if available
-        try {
-          const cached = localStorage.getItem(CACHE_KEY);
-          if (cached) {
-            const parsed: CachedImage = JSON.parse(cached);
-            if (!cancelled) setImageObject(parsed);
-          } else {
-            if (!cancelled) setImageObject(FALLBACK_BACKGROUND);
-          }
-        } catch {
-          if (!cancelled) setImageObject(FALLBACK_BACKGROUND);
-        } finally {
-          if (!cancelled) setIsLoading(false);
-        }
-      }
-    }
-
-    loadDailyBackground();
+    // Rotate every 30 seconds
+    const interval = setInterval(() => {
+      fetchAndSetBackground();
+    }, SLIDESHOW_INTERVAL);
 
     return () => {
-      cancelled = true;
+      cancelledRef.current = true;
+      clearInterval(interval);
     };
   }, []);
 
@@ -142,7 +115,10 @@ export default function Background({
   return (
     <div className="relative h-svh w-screen overflow-hidden">
       {/* Background Layer */}
-      <div className="absolute inset-0">
+      <div
+        className="absolute inset-0 transition-opacity duration-500"
+        style={{ opacity: isFading ? 0 : 1 }}
+      >
         {media_type === "video" ? (
           <video
             src={image_url}
@@ -152,7 +128,7 @@ export default function Background({
             playsInline
             preload="metadata"
             className="h-full w-full object-cover"
-            aria-label="Daily background video"
+            aria-label="Background video"
           />
         ) : (
           <img src={image_url} alt="" className="h-full w-full object-cover" />
@@ -161,9 +137,10 @@ export default function Background({
 
       {/* Overlay */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none transition-opacity duration-500"
         style={{
           backgroundColor: hexToRgba(overlay_color, overlay_opacity),
+          opacity: isFading ? 0 : 1,
         }}
       />
 

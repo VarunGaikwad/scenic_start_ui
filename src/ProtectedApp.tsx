@@ -83,31 +83,37 @@ export default function ProtectedApp() {
     };
   }, [checkAuth]);
 
-  return (
-    <Background>
-      {loading ? (
+  if (loading) {
+    return (
+      <Background>
         <div className="flex items-center justify-center h-screen w-screen">
           <div className="text-center space-y-4">
             <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto" />
             <div className="text-white/70">Verifying authentication...</div>
           </div>
         </div>
-      ) : (
-        <>
-          {error && (
-            <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2">
-              <span>{error}</span>
-              <button
-                onClick={checkAuth}
-                className="underline hover:no-underline text-sm"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-          {authenticated ? <ScenicApp /> : <KnowYourClient />}
-        </>
+      </Background>
+    );
+  }
+
+  if (!authenticated) {
+    return <KnowYourClient />;
+  }
+
+  return (
+    <Background>
+      {error && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2">
+          <span>{error}</span>
+          <button
+            onClick={checkAuth}
+            className="underline hover:no-underline text-sm"
+          >
+            Retry
+          </button>
+        </div>
       )}
+      <ScenicApp />
     </Background>
   );
 }
