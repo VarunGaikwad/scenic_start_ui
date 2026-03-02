@@ -123,23 +123,6 @@ export default function Dashboard() {
     [activeTreeId],
   );
 
-  const activeFolder = tree.find((folder) => folder._id === activeTreeId);
-  const children = activeFolder?.children || [];
-  // Collect widgets: items with type="widget" items OR items with widget:// URI
-  const activeWidgets = children.filter(
-    (c) =>
-      c.type === "widget" ||
-      c.widgetType === "EMBED" ||
-      (c.url && c.url.startsWith("widget://")),
-  );
-
-  const bookmarks = children.filter(
-    (c) =>
-      c.type !== "widget" &&
-      c.widgetType !== "EMBED" &&
-      (!c.url || !c.url.startsWith("widget://")),
-  );
-
   const folders = tree.filter((item) => item.type === "folder");
 
   return (
@@ -188,135 +171,163 @@ export default function Dashboard() {
         </nav>
       )}
 
-      {/* ── Widgets (Scoped to Active Folder) ── */}
-      {activeWidgets.length > 0 && (
-        <section className="w-full">
-          <div
-            className={
-              activeWidgets.length === 1
-                ? "w-full"
-                : "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
-            }
-          >
-            {activeWidgets.map((widget, i) => (
-              <div
-                key={widget._id}
-                className="relative group w-full"
-                style={{
-                  animation: `fadeSlideUp 0.5s ease-out ${i * 80}ms both`,
-                }}
-              >
-                {/* Delete */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(
-                      widget._id,
-                      widget.title,
-                      "widget",
-                      widget.parentId,
-                    );
-                  }}
-                  className="absolute -top-2 -right-2 z-20 bg-red-500/90 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-500 hover:scale-110 shadow-lg"
-                  title="Remove widget"
-                >
-                  <Plus className="rotate-45 w-3.5 h-3.5" />
-                </button>
+      {/* ── Content Panes (Persistent to preserve iframe state) ── */}
+      {folders.map((folder) => {
+        const isActive = folder._id === activeTreeId;
+        const folderChildren = folder.children || [];
+        const folderWidgets = folderChildren.filter(
+          (c) =>
+            c.type === "widget" ||
+            c.widgetType === "EMBED" ||
+            (c.url && c.url.startsWith("widget://")),
+        );
+        const folderBookmarks = folderChildren.filter(
+          (c) =>
+            c.type !== "widget" &&
+            c.widgetType !== "EMBED" &&
+            (!c.url || !c.url.startsWith("widget://")),
+        );
 
-                <div className="transition-transform duration-300 hover:scale-[1.005]">
-                  {widget.widgetType === "LRT" ? (
-                    <div className="max-w-xl mx-auto w-full">
-                      <LRTSchedule />
+        return (
+          <div
+            key={folder._id}
+            className={isActive ? "block w-full" : "hidden"}
+            aria-hidden={!isActive}
+          >
+            {/* ── Widgets ── */}
+            {folderWidgets.length > 0 && (
+              <section className="w-full mb-8">
+                <div
+                  className={
+                    folderWidgets.length === 1
+                      ? "w-full"
+                      : "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                  }
+                >
+                  {folderWidgets.map((widget, i) => (
+                    <div
+                      key={widget._id}
+                      className="relative group w-full"
+                      style={{
+                        animation: isActive
+                          ? `fadeSlideUp 0.5s ease-out ${i * 80}ms both`
+                          : "none",
+                      }}
+                    >
+                      {/* Delete */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(
+                            widget._id,
+                            widget.title,
+                            "widget",
+                            widget.parentId,
+                          );
+                        }}
+                        className="absolute -top-2 -right-2 z-20 bg-red-500/90 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-500 hover:scale-110 shadow-lg"
+                        title="Remove widget"
+                      >
+                        <Plus className="rotate-45 w-3.5 h-3.5" />
+                      </button>
+
+                      <div className="transition-transform duration-300 hover:scale-[1.005]">
+                        {widget.widgetType === "LRT" ? (
+                          <div className="max-w-xl mx-auto w-full">
+                            <LRTSchedule />
+                          </div>
+                        ) : widget.widgetType === "EMBED" ||
+                          (widget.url &&
+                            widget.url.startsWith("widget://EMBED/")) ? (
+                          <EmbedWidget
+                            url={
+                              widget.url &&
+                              widget.url.startsWith("widget://EMBED/")
+                                ? decodeURIComponent(
+                                    widget.url.replace("widget://EMBED/", ""),
+                                  )
+                                : widget.url || ""
+                            }
+                          />
+                        ) : (
+                          <div className="w-full h-44 bg-white/4 backdrop-blur-xl rounded-2xl flex flex-col items-center justify-center p-6 border border-white/6 hover:bg-white/[0.07] transition-colors">
+                            <span className="text-lg font-light tracking-wide text-white/70">
+                              {widget.title}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  ) : widget.widgetType === "EMBED" ||
-                    (widget.url && widget.url.startsWith("widget://EMBED/")) ? (
-                    <EmbedWidget
-                      url={
-                        widget.url && widget.url.startsWith("widget://EMBED/")
-                          ? decodeURIComponent(
-                              widget.url.replace("widget://EMBED/", ""),
-                            )
-                          : widget.url || ""
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ── Bookmarks Grid ── */}
+            {/* Show bookmarks even if widgets are present, but in different sections */}
+            <section className="w-full">
+              {folderBookmarks.length > 0 ? (
+                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-x-5 gap-y-7 justify-items-center">
+                  {folderBookmarks.map((bookmark, i) => (
+                    <BookmarkIcon
+                      key={bookmark._id}
+                      bookmark={bookmark}
+                      index={i}
+                      onEdit={() => setEditingBookmark(bookmark)}
+                      onDelete={() =>
+                        onDelete(
+                          bookmark._id,
+                          bookmark.title,
+                          "link",
+                          bookmark.parentId,
+                        )
                       }
                     />
-                  ) : (
-                    <div className="w-full h-44 bg-white/4 backdrop-blur-xl rounded-2xl flex flex-col items-center justify-center p-6 border border-white/6 hover:bg-white/[0.07] transition-colors">
-                      <span className="text-lg font-light tracking-wide text-white/70">
-                        {widget.title}
-                      </span>
+                  ))}
+
+                  {/* Add link */}
+                  <button
+                    onClick={() => setIsAddingLink(true)}
+                    className="group flex flex-col items-center gap-2.5 w-22 cursor-pointer"
+                    title="Add a new bookmark"
+                  >
+                    <div className="w-16 h-16 rounded-2xl bg-white/4 border border-dashed border-white/15 flex items-center justify-center group-hover:bg-white/8 group-hover:border-white/30 transition-all duration-250">
+                      <Plus className="w-6 h-6 text-white/25 group-hover:text-white/60 transition-colors" />
                     </div>
-                  )}
+                    <span className="text-[11px] font-medium text-white/25 group-hover:text-white/50 transition-colors">
+                      Add link
+                    </span>
+                  </button>
                 </div>
-              </div>
-            ))}
+              ) : (
+                /* Empty state - only if no widgets either */
+                folderWidgets.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-white/4 border border-white/6 flex items-center justify-center">
+                      <FolderOpen className="w-7 h-7 text-white/20" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-white/40">
+                        {`No links in "${folder.title}" yet`}
+                      </p>
+                      <p className="text-xs text-white/25 mt-1">
+                        Add your first bookmark to get started
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setIsAddingLink(true)}
+                      className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/6 hover:bg-white/10 border border-white/8 text-sm text-white/60 hover:text-white/90 transition-all duration-200"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add your first link
+                    </button>
+                  </div>
+                )
+              )}
+            </section>
           </div>
-        </section>
-      )}
-
-      {/* ── Bookmarks Grid ── */}
-      {/* Only show bookmarks if no widgets are present in this folder */}
-      {activeWidgets.length === 0 && (
-        <section className="w-full">
-          {bookmarks.length > 0 ? (
-            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-x-5 gap-y-7 justify-items-center">
-              {bookmarks.map((bookmark, i) => (
-                <BookmarkIcon
-                  key={bookmark._id}
-                  bookmark={bookmark}
-                  index={i}
-                  onEdit={() => setEditingBookmark(bookmark)}
-                  onDelete={() =>
-                    onDelete(
-                      bookmark._id,
-                      bookmark.title,
-                      "link",
-                      bookmark.parentId,
-                    )
-                  }
-                />
-              ))}
-
-              {/* Add link */}
-              <button
-                onClick={() => setIsAddingLink(true)}
-                className="group flex flex-col items-center gap-2.5 w-22 cursor-pointer"
-                title="Add a new bookmark"
-              >
-                <div className="w-16 h-16 rounded-2xl bg-white/4 border border-dashed border-white/15 flex items-center justify-center group-hover:bg-white/8 group-hover:border-white/30 transition-all duration-250">
-                  <Plus className="w-6 h-6 text-white/25 group-hover:text-white/60 transition-colors" />
-                </div>
-                <span className="text-[11px] font-medium text-white/25 group-hover:text-white/50 transition-colors">
-                  Add link
-                </span>
-              </button>
-            </div>
-          ) : (
-            /* Empty state */
-            <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-white/4 border border-white/6 flex items-center justify-center">
-                <FolderOpen className="w-7 h-7 text-white/20" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white/40">
-                  {activeFolder
-                    ? `No links in "${activeFolder.title}" yet`
-                    : "No collection selected"}
-                </p>
-                <p className="text-xs text-white/25 mt-1">
-                  Add your first bookmark to get started
-                </p>
-              </div>
-              <button
-                onClick={() => setIsAddingLink(true)}
-                className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/6 hover:bg-white/10 border border-white/8 text-sm text-white/60 hover:text-white/90 transition-all duration-200"
-              >
-                <Plus className="w-4 h-4" />
-                Add your first link
-              </button>
-            </div>
-          )}
-        </section>
-      )}
+        );
+      })}
 
       {/* ── Link Modal ── */}
       {(editingBookmark || isAddingLink) && (

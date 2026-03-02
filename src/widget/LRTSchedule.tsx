@@ -8,8 +8,10 @@ import {
   ChevronDown,
   Check,
   Footprints,
+  WifiOff,
 } from "lucide-react";
 import { STORAGE_KEYS } from "@/constants";
+import { getDataFromLocalStorage, setDataToLocalStorage } from "@/utils";
 
 const DEFAULT_WALK_BUFFER = 15;
 const MIN_WALK_BUFFER = 0;
@@ -22,11 +24,17 @@ const toMinutes = (time: string) => {
 };
 
 const todayDate = () => new Date().toLocaleDateString("en-US");
+
+const getDayType = () => {
+  const day = new Date().getDay();
+  return day === 0 || day === 6 ? "weekend" : "weekday";
+};
+
 const leaveByTime = (departure: string, walkBuffer: number) => {
   const [h, m] = departure.split(":").map(Number);
   const totalMinutes = h * 60 + m - walkBuffer;
-  const lh = Math.floor(totalMinutes / 60) % 24;
-  const lm = totalMinutes % 60;
+  const lh = (Math.floor(totalMinutes / 60) + 24) % 24;
+  const lm = ((totalMinutes % 60) + 60) % 60;
   return `${String(lh).padStart(2, "0")}:${String(lm).padStart(2, "0")}`;
 };
 
@@ -169,25 +177,26 @@ function WalkBufferControl({
 export default function LRTSchedule() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const [stations, setStations] = useState<string[]>([]);
+  const [stations, setStations] = useState<string[]>(() => {
+    return getDataFromLocalStorage<string[]>(STORAGE_KEYS.LRT_STATIONS) || [];
+  });
   const [origin, setOrigin] = useState<string>(
-    () => localStorage.getItem(STORAGE_KEYS.LRT_SOURCE) ?? "",
+    () => getDataFromLocalStorage<string>(STORAGE_KEYS.LRT_SOURCE) || "",
   );
   const [destination, setDestination] = useState<string>(
-    () => localStorage.getItem(STORAGE_KEYS.LRT_DESTINATION) ?? "",
+    () => getDataFromLocalStorage<string>(STORAGE_KEYS.LRT_DESTINATION) || "",
   );
   const [walkBuffer, setWalkBuffer] = useState<number>(() => {
-    const stored = localStorage.getItem(STORAGE_KEYS.LRT_WALK_BUFFER);
-    if (stored !== null) {
-      const parsed = parseInt(stored, 10);
-      if (!isNaN(parsed)) return parsed;
-    }
-    return DEFAULT_WALK_BUFFER;
+    const stored = getDataFromLocalStorage<number>(
+      STORAGE_KEYS.LRT_WALK_BUFFER,
+    );
+    return typeof stored === "number" ? stored : DEFAULT_WALK_BUFFER;
   });
   const [schedule, setSchedule] = useState<Record<string, string[]> | null>(
     null,
   );
   const [loading, setLoading] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
   const [now, setNow] = useState(new Date());
 
   // Align to minute boundary, then tick every 60s
@@ -207,46 +216,101 @@ export default function LRTSchedule() {
   }, []);
 
   useEffect(() => {
-    getStations().then((data) => {
-      setStations(data);
-      if (!localStorage.getItem(STORAGE_KEYS.LRT_SOURCE) && data.length > 0)
-        setOrigin(data[0]);
-      if (
-        !localStorage.getItem(STORAGE_KEYS.LRT_DESTINATION) &&
-        data.length > 1
-      )
-        setDestination(data[1]);
-    });
+    getStations()
+      .then((data) => {
+        setStations(data);
+        setDataToLocalStorage(STORAGE_KEYS.LRT_STATIONS, data);
+        if (!origin && data.length > 0) handleOriginChange(data[0]);
+        if (!destination && data.length > 1) handleDestinationChange(data[1]);
+      })
+      .catch((err) => {
+        console.warn("Using offline stations:", err);
+      });
   }, []);
 
   const handleOriginChange = (v: string) => {
     setOrigin(v);
-    localStorage.setItem(STORAGE_KEYS.LRT_SOURCE, v);
+    setDataToLocalStorage(STORAGE_KEYS.LRT_SOURCE, v);
   };
 
   const handleDestinationChange = (v: string) => {
     setDestination(v);
-    localStorage.setItem(STORAGE_KEYS.LRT_DESTINATION, v);
+    setDataToLocalStorage(STORAGE_KEYS.LRT_DESTINATION, v);
   };
 
   const handleWalkBufferChange = (v: number) => {
     setWalkBuffer(v);
-    localStorage.setItem(STORAGE_KEYS.LRT_WALK_BUFFER, String(v));
+    setDataToLocalStorage(STORAGE_KEYS.LRT_WALK_BUFFER, v);
   };
 
   const swapStations = () => {
+    const oldOrigin = origin;
     handleOriginChange(destination);
-    handleDestinationChange(origin);
+    handleDestinationChange(oldOrigin);
   };
 
   useEffect(() => {
     if (!origin || !destination || origin === destination) return;
-    setLoading(true);
-    setSchedule(null);
-    getSchedule({ origin, destination, date: todayDate() })
-      .then(setSchedule)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+
+    const fetchSchedule = async () => {
+      setLoading(true);
+      setIsOffline(false);
+
+      try {
+        const response = await getSchedule({
+          origin,
+          destination,
+          date: todayDate(),
+        });
+
+        // Use destructuring to separate the scheduleType from the station data
+        // New: { scheduleType: "weekday", "StationA": [...], ... }
+        // Old: { "StationA": [...], ... }
+        const { scheduleType, ...scheduleData } = response;
+        const serverScheduleType = scheduleType || getDayType();
+
+        setSchedule(scheduleData);
+
+        // Determine which cache slot to use based on backend info
+        const effectiveType =
+          serverScheduleType === "holiday" ? "weekend" : serverScheduleType;
+        const cacheKey = `${origin}-${destination}-${effectiveType}`;
+
+        const cache =
+          getDataFromLocalStorage<Record<string, any>>(
+            STORAGE_KEYS.LRT_SCHEDULE_CACHE,
+          ) || {};
+
+        cache[cacheKey] = {
+          data: scheduleData,
+          lastFetched: Date.now(),
+          type: effectiveType,
+        };
+        setDataToLocalStorage(STORAGE_KEYS.LRT_SCHEDULE_CACHE, cache);
+      } catch (error) {
+        console.error("Failed to fetch schedule, checking cache:", error);
+
+        // Fallback: When offline, we guess type based on day of week
+        const guestimatedType = getDayType();
+        const cacheKey = `${origin}-${destination}-${guestimatedType}`;
+
+        const cache = getDataFromLocalStorage<Record<string, any>>(
+          STORAGE_KEYS.LRT_SCHEDULE_CACHE,
+        );
+
+        if (cache && cache[cacheKey]) {
+          setSchedule(cache[cacheKey].data);
+          setIsOffline(true);
+        } else {
+          setSchedule(null);
+          setIsOffline(true);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchedule();
   }, [origin, destination]);
 
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -308,6 +372,13 @@ export default function LRTSchedule() {
           align="right"
         />
       </div>
+
+      {isOffline && (
+        <div className="px-4 pb-2 flex items-center gap-1.5 text-[10px] text-amber-500/60 font-medium uppercase tracking-wider">
+          <WifiOff size={10} />
+          <span>Offline Mode — Using Cached Schedule</span>
+        </div>
+      )}
 
       <div className="h-px bg-white/5 mx-4" />
 

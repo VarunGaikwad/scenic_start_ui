@@ -1,5 +1,8 @@
+import { STORAGE_KEYS } from "@/constants";
 import type { BookmarkTreeType } from "@/interface";
-import { Pencil, Trash2 } from "lucide-react";
+import { getDataFromLocalStorage, setDataToLocalStorage } from "@/utils";
+import { Pencil, Trash2, Globe } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface BookmarkIconProps {
   bookmark: BookmarkTreeType;
@@ -15,7 +18,55 @@ export default function BookmarkIcon({
   onDelete,
 }: BookmarkIconProps) {
   const hostname = bookmark.url ? new URL(bookmark.url).hostname : "";
-  const faviconUrl = `https://scenic-start-node-ten.vercel.app/api/auth/favorite-icon?domain=${hostname}`;
+  const [iconSrc, setIconSrc] = useState<string>("");
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    if (!hostname) return;
+
+    // Check cache first
+    const cache = getDataFromLocalStorage<Record<string, string>>(
+      STORAGE_KEYS.FAVORITE_ICONS,
+    );
+    if (cache && cache[hostname]) {
+      setIconSrc(cache[hostname]);
+      return;
+    }
+
+    // Otherwise use network URL
+    setIconSrc(
+      `https://scenic-start-node-ten.vercel.app/api/unauth/favorite-icon?domain=${hostname}`,
+    );
+  }, [hostname]);
+
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    if (!hostname || iconSrc.startsWith("data:")) return;
+
+    // Convert to Base64 and cache if it's a fresh network load
+    try {
+      const img = e.currentTarget;
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        const base64 = canvas.toDataURL("image/png");
+
+        const cache =
+          getDataFromLocalStorage<Record<string, string>>(
+            STORAGE_KEYS.FAVORITE_ICONS,
+          ) || {};
+
+        if (cache[hostname] !== base64) {
+          cache[hostname] = base64;
+          setDataToLocalStorage(STORAGE_KEYS.FAVORITE_ICONS, cache);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to cache favicon:", err);
+    }
+  };
 
   return (
     <div
@@ -38,17 +89,31 @@ export default function BookmarkIcon({
           );
         }}
       >
-        <img
-          src={faviconUrl}
-          alt={bookmark.title}
-          className="w-8 h-8 rounded-md object-contain drop-shadow-md"
-          loading="lazy"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.onerror = null;
-            target.src = `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
-          }}
-        />
+        {loadError || !iconSrc ? (
+          <Globe className="w-8 h-8 text-white/20" />
+        ) : (
+          <img
+            src={iconSrc}
+            alt={bookmark.title}
+            className="w-8 h-8 rounded-md object-contain drop-shadow-md"
+            loading="lazy"
+            crossOrigin="anonymous"
+            onLoad={handleImageLoad}
+            onError={() => {
+              if (
+                iconSrc.includes("scenic-start") &&
+                !iconSrc.startsWith("data:")
+              ) {
+                // Secondary fallback to Google if primary fails
+                setIconSrc(
+                  `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`,
+                );
+              } else {
+                setLoadError(true);
+              }
+            }}
+          />
+        )}
 
         {/* Floating Actions (Outside) */}
         <div className="absolute -top-3 -right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 z-50 scale-90 group-hover:scale-100">

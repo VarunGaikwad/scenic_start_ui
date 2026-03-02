@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
   // Bookmarks
   BOOKMARK_TREE: "scenic:v1:bookmarks:tree",
   ACTIVE_TREE_ID: "scenic:v1:bookmarks:active_tree_id",
+  FAVORITE_ICONS: "scenic:v1:favicons",
 
   // Weather
   WEATHER_INFO: "scenic:v1:weather:info",
@@ -33,6 +34,8 @@ export const STORAGE_KEYS = {
   LRT_SOURCE: "scenic:v1:lrt:source",
   LRT_DESTINATION: "scenic:v1:lrt:destination",
   LRT_WALK_BUFFER: "scenic:v1:lrt:walk_buffer",
+  LRT_STATIONS: "scenic:v1:lrt:stations",
+  LRT_SCHEDULE_CACHE: "scenic:v1:lrt:schedule_cache",
 
   LAST_AUTH_TIMESTAMP: "scenic:v1:last_auth_timestamp",
 };
