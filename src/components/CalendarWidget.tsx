@@ -36,8 +36,8 @@ export default function CalendarWidget() {
     };
 
     fetchTasks();
-    // Poll for updates (simplified)
-    const interval = setInterval(fetchTasks, 5000);
+    // Poll for updates (reduced frequency to save resources)
+    const interval = setInterval(fetchTasks, 30000);
     return () => clearInterval(interval);
   }, []);
 

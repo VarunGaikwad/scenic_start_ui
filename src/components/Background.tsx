@@ -2,7 +2,7 @@ import { getBackgroundImage } from "@/api";
 import type { ImageResponseType } from "@/interface";
 import { useEffect, useRef, useState } from "react";
 
-const SLIDESHOW_INTERVAL = 30_000; // 30 seconds
+const SLIDESHOW_INTERVAL = 5 * 60_000; // 5 minutes
 
 function preloadMedia(src: string, type: "image" | "video"): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -32,11 +32,11 @@ function hexToRgba(hex: string, opacity: number): string {
 
 const FALLBACK_BACKGROUND: ImageResponseType = {
   id: "fallback",
-  image_url: "",
+  image_url: "/image.png",
   is_welcome: false,
   media_type: "image",
-  overlay_color: "#1a1a1a",
-  overlay_opacity: 1,
+  overlay_color: "#111827",
+  overlay_opacity: 0.5,
   text_color: "light",
 };
 
@@ -46,9 +46,9 @@ export default function Background({
   children?: React.ReactNode;
 }) {
   const [imageObject, setImageObject] = useState<ImageResponseType | null>(
-    null,
+    FALLBACK_BACKGROUND,
   );
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isFading, setIsFading] = useState(false);
   const cancelledRef = useRef(false);
   const isFetchingRef = useRef(false);
@@ -56,6 +56,7 @@ export default function Background({
   async function fetchAndSetBackground() {
     if (isFetchingRef.current || cancelledRef.current) return;
     isFetchingRef.current = true;
+    setIsLoading(true);
 
     try {
       const data = await getBackgroundImage();
@@ -69,16 +70,15 @@ export default function Background({
         if (cancelledRef.current) return;
         setImageObject(data);
         setIsFading(false);
-        setIsLoading(false);
       }, 500); // match CSS transition duration
     } catch (error) {
       console.error("Failed to load background:", error);
       if (!cancelledRef.current) {
         setImageObject(FALLBACK_BACKGROUND);
-        setIsLoading(false);
       }
     } finally {
       isFetchingRef.current = false;
+      setIsLoading(false);
     }
   }
 
@@ -101,19 +101,11 @@ export default function Background({
     };
   }, []);
 
-  if (!imageObject) {
-    return (
-      <div className="flex h-svh items-center justify-center bg-gray-900">
-        {isLoading ? <div className="text-white/50">Loading...</div> : children}
-      </div>
-    );
-  }
-
   const { image_url, overlay_color, overlay_opacity, text_color, media_type } =
-    imageObject;
+    imageObject!;
 
   return (
-    <div className="relative h-svh w-screen overflow-hidden">
+    <div className="relative h-svh w-screen overflow-hidden bg-gray-900">
       {/* Background Layer */}
       <div
         className="absolute inset-0 transition-opacity duration-500"
@@ -146,10 +138,15 @@ export default function Background({
 
       {/* Content */}
       <div
-        className="relative z-10 flex h-svh"
+        className="relative z-10 flex h-svh w-full"
         style={{ color: text_color === "light" ? "#ffffff" : "#000000" }}
       >
         {children}
+        {isLoading && (
+          <div className="absolute bottom-4 right-4 text-white/20 text-xs pointer-events-none">
+            Updating background...
+          </div>
+        )}
       </div>
     </div>
   );

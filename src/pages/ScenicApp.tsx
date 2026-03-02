@@ -4,7 +4,6 @@ import {
   Quote,
   SearchEngine,
   Weather,
-  CalendarWidget,
 } from "@/components";
 
 export default function ScenicApp() {
@@ -45,9 +44,9 @@ export default function ScenicApp() {
         <div className="pointer-events-auto hover:scale-105 transition-transform duration-300">
           <Weather />
         </div>
-        <div className="pointer-events-auto hover:scale-105 transition-transform duration-300 hidden md:block">
+        {/* <div className="pointer-events-auto hover:scale-105 transition-transform duration-300 hidden md:block">
           <CalendarWidget />
-        </div>
+        </div> */}
       </footer>
     </div>
   );
