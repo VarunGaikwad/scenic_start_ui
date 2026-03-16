@@ -7,4 +7,9 @@ export interface CalendarTask {
   completed: boolean;
   type: TaskType;
   time?: string;
+  description?: string;
+  priority?: string;
+  location?: string;
+  createdAt?: string;
+  userId?: string;
 }

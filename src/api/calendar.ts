@@ -1,5 +1,6 @@
 import type { CalendarTask } from "@/interface";
 import client from "./client";
+import { isMe } from "./auth";
 
 const PATH = `/auth/calendar-reminders`;
 
@@ -11,6 +12,11 @@ const mapApiToTask = (apiData: any): CalendarTask => ({
   completed: apiData.completed || false,
   type: apiData.type || "task",
   time: apiData.time,
+  description: apiData.description,
+  priority: apiData.priority,
+  location: apiData.location,
+  createdAt: apiData.createdAt,
+  userId: apiData.userId,
 });
 
 export const getTasks = async (): Promise<CalendarTask[]> => {
@@ -58,16 +64,27 @@ export const getTasksDueToday = async (): Promise<CalendarTask[]> => {
 export const addTask = async (
   task: Omit<CalendarTask, "id">,
 ): Promise<CalendarTask> => {
+  let userId = task.userId;
+  if (!userId) {
+    try {
+      const user = await isMe();
+      userId = user?._id || user?.id; // backend user model typically has an id or _id
+    } catch (err) {
+      console.warn("Failed to fetch user in addTask", err);
+    }
+  }
+
   const { data } = await client.post(PATH, {
     title: task.title,
     date: task.date,
     completed: task.completed,
     type: task.type,
     time: task.time,
-    // Add default values for fields backend expects but frontend doesn't use yet
-    description: "",
-    priority: "medium",
-    location: "Unknown",
+    description: task.description || "",
+    priority: task.priority || "medium",
+    location: task.location || "",
+    createdAt: task.createdAt || new Date().toISOString(),
+    userId: userId,
   });
   return mapApiToTask(data);
 };
@@ -80,7 +97,7 @@ export const updateTask = async (
   id: string,
   updates: Partial<CalendarTask>,
 ): Promise<CalendarTask> => {
-  const { data } = await client.put(`${PATH}/${id}`, {
+  const { data } = await client.patch(`${PATH}/${id}`, {
     ...updates,
   });
   return mapApiToTask(data);

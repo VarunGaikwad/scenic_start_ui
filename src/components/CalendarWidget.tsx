@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Calendar, ChevronRight, Gift, Bell } from "lucide-react";
 import { getTasks } from "@/api";
 import type { CalendarTask } from "@/interface";
@@ -55,35 +55,52 @@ export default function CalendarWidget() {
     };
 
     fetchTasks();
-    // Poll for updates (reduced frequency to save resources)
-    const interval = setInterval(fetchTasks, 30000);
-    return () => clearInterval(interval);
   }, [triggerFetch]);
 
   const birthday = todayTasks.find((t) => t.type === "birthday");
   const specialEvent = todayTasks.find((t) => t.type === "event");
 
-  // Trigger Notification only once per unique task
-  const notifiedTasksRef = useRef<Set<string>>(new Set());
+  // Trigger Notification only once per unique task across sessions using localStorage
+  const NOTIFICATION_KEY = "scenic_calendar_notified_tasks";
 
   useEffect(() => {
-    if (birthday && !notifiedTasksRef.current.has(birthday.id)) {
+    // Read previously notified tasks from localStorage
+    const getNotifiedTasks = (): Set<string> => {
+      try {
+        const stored = localStorage.getItem(NOTIFICATION_KEY);
+        return new Set(stored ? JSON.parse(stored) : []);
+      } catch {
+        return new Set();
+      }
+    };
+
+    const markAsNotified = (id: string, currentSet: Set<string>) => {
+      currentSet.add(id);
+      localStorage.setItem(
+        NOTIFICATION_KEY,
+        JSON.stringify(Array.from(currentSet))
+      );
+    };
+
+    const currentNotified = getNotifiedTasks();
+
+    if (birthday && !currentNotified.has(birthday.id)) {
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification("Special Day!", {
           body: `🎂 It's ${birthday.title} today!${birthday.time ? ` at ${birthday.time}` : ""}`,
           icon: "/icons/calendar.png",
         });
-        notifiedTasksRef.current.add(birthday.id);
+        markAsNotified(birthday.id, currentNotified);
       }
     }
 
-    if (specialEvent && !notifiedTasksRef.current.has(specialEvent.id)) {
+    if (specialEvent && !currentNotified.has(specialEvent.id)) {
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification("Special Day!", {
           body: `🔔 Event today: ${specialEvent.title}${specialEvent.time ? ` at ${specialEvent.time}` : ""}`,
           icon: "/icons/calendar.png",
         });
-        notifiedTasksRef.current.add(specialEvent.id);
+        markAsNotified(specialEvent.id, currentNotified);
       }
     }
   }, [birthday, specialEvent]);
