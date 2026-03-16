@@ -69,7 +69,7 @@ export default function Modal({
 
   // 3. Using a Portal to avoid Z-Index fighting
   return createPortal(
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop with fade-in animation potential */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"

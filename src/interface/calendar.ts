@@ -6,4 +6,5 @@ export interface CalendarTask {
   title: string;
   completed: boolean;
   type: TaskType;
+  time?: string;
 }

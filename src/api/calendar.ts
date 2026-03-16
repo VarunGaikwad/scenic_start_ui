@@ -1,65 +1,87 @@
 import type { CalendarTask } from "@/interface";
-import { getDataFromLocalStorage, setDataToLocalStorage } from "@/utils";
+import client from "./client";
 
-import { STORAGE_KEYS } from "@/constants";
+const PATH = `/auth/calendar-reminders`;
 
-// Mock delay to simulate API
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const STORAGE_KEY = STORAGE_KEYS.CALENDAR_TASKS;
+// Map backend structure to frontend structure
+const mapApiToTask = (apiData: any): CalendarTask => ({
+  id: apiData._id || apiData.id,
+  title: apiData.title,
+  date: apiData.date,
+  completed: apiData.completed || false,
+  type: apiData.type || "task",
+  time: apiData.time,
+});
 
 export const getTasks = async (): Promise<CalendarTask[]> => {
-  await delay(100); // Simulate network
-  const tasks = getDataFromLocalStorage(STORAGE_KEY) as CalendarTask[] | null;
-  return tasks || [];
+  try {
+    const { data } = await client.get(PATH);
+    return (data || []).map(mapApiToTask);
+  } catch (error) {
+    console.error("Error fetching calendar tasks:", error);
+    return [];
+  }
+};
+
+export const getTaskById = async (id: string): Promise<CalendarTask | null> => {
+  try {
+    const { data } = await client.get(`${PATH}/${id}`);
+    return mapApiToTask(data);
+  } catch (error) {
+    console.error(`Error fetching calendar task ${id}:`, error);
+    return null;
+  }
+};
+
+export const getTasksByUser = async (
+  userId: string,
+): Promise<CalendarTask[]> => {
+  try {
+    const { data } = await client.get(`${PATH}/user/${userId}`);
+    return (data || []).map(mapApiToTask);
+  } catch (error) {
+    console.error(`Error fetching calendar tasks for user ${userId}:`, error);
+    return [];
+  }
+};
+
+export const getTasksDueToday = async (): Promise<CalendarTask[]> => {
+  try {
+    const { data } = await client.get(`${PATH}/due/today`);
+    return (data || []).map(mapApiToTask);
+  } catch (error) {
+    console.error("Error fetching today's calendar tasks:", error);
+    return [];
+  }
 };
 
 export const addTask = async (
   task: Omit<CalendarTask, "id">,
 ): Promise<CalendarTask> => {
-  await delay(100);
-  const tasks =
-    (getDataFromLocalStorage(STORAGE_KEY) as CalendarTask[] | null) || [];
-
-  const newTask: CalendarTask = {
-    ...task,
-    id: crypto.randomUUID(),
-  };
-
-  const updatedTasks = [...tasks, newTask];
-  setDataToLocalStorage(STORAGE_KEY, updatedTasks);
-
-  return newTask;
+  const { data } = await client.post(PATH, {
+    title: task.title,
+    date: task.date,
+    completed: task.completed,
+    type: task.type,
+    time: task.time,
+    // Add default values for fields backend expects but frontend doesn't use yet
+    description: "",
+    priority: "medium",
+    location: "Unknown",
+  });
+  return mapApiToTask(data);
 };
 
 export const deleteTask = async (id: string): Promise<void> => {
-  await delay(100);
-  const tasks =
-    (getDataFromLocalStorage(STORAGE_KEY) as CalendarTask[] | null) || [];
-  const updatedTasks = tasks.filter((t) => t.id !== id);
-  setDataToLocalStorage(STORAGE_KEY, updatedTasks);
+  await client.delete(`${PATH}/${id}`);
 };
 
 export const updateTask = async (
   id: string,
   updates: Partial<CalendarTask>,
 ): Promise<CalendarTask> => {
-  await delay(100);
-  const tasks =
-    (getDataFromLocalStorage(STORAGE_KEY) as CalendarTask[] | null) || [];
-
-  let updatedTask: CalendarTask | undefined;
-
-  const updatedTasks = tasks.map((t) => {
-    if (t.id === id) {
-      updatedTask = { ...t, ...updates };
-      return updatedTask;
-    }
-    return t;
+  const { data } = await client.put(`${PATH}/${id}`, {
+    ...updates,
   });
-
-  if (!updatedTask) throw new Error("Task not found");
-
-  setDataToLocalStorage(STORAGE_KEY, updatedTasks);
-  return updatedTask;
+  return mapApiToTask(data);
 };

@@ -4,7 +4,11 @@
   "version": "1.7.5",
   "description": "Scenic",
   "author": "Varun Gaikwad",
-  "permissions": ["tabs", "storage", "activeTab", "geolocation"],
+  "permissions": ["tabs", "storage", "activeTab", "geolocation", "favicon"],
+  "host_permissions": [
+    "https://scenic-start-node-ten.vercel.app/*",
+    "https://www.google.com/s2/favicons*"
+  ],
   "chrome_url_overrides": {
     "newtab": "index.html"
   },

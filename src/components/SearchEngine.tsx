@@ -6,7 +6,11 @@ import {
   type KeyboardEvent,
 } from "react";
 import { Search, ExternalLink } from "lucide-react";
-import { getDataFromLocalStorage, setDataToLocalStorage } from "@/utils";
+import {
+  getDataFromLocalStorage,
+  setDataToLocalStorage,
+  getFaviconUrl,
+} from "@/utils";
 import { STORAGE_KEYS } from "@/constants";
 import type { BookmarkTreeType } from "@/interface";
 import { Modal, LRTCard, EmbedWidget } from "@/widget";
@@ -245,7 +249,11 @@ export default function SearchEngine() {
               const hostname = bookmark.url
                 ? new URL(bookmark.url).hostname
                 : "";
-              const faviconUrl = `https://scenic-start-node-ten.vercel.app/api/auth/favorite-icon?domain=${hostname}`;
+              const faviconUrl = getFaviconUrl(
+                bookmark.url || "",
+                hostname,
+                32,
+              );
 
               return (
                 <li key={bookmark._id}>
@@ -268,8 +276,9 @@ export default function SearchEngine() {
                         alt=""
                         className="w-5 h-5 rounded-sm opacity-80"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
+                          const img = e.currentTarget;
+                          img.removeAttribute("crossOrigin");
+                          img.src = `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
                         }}
                       />
                     )}

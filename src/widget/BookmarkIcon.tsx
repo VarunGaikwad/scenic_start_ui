@@ -1,6 +1,10 @@
 import { STORAGE_KEYS } from "@/constants";
 import type { BookmarkTreeType } from "@/interface";
-import { getDataFromLocalStorage, setDataToLocalStorage } from "@/utils";
+import {
+  getDataFromLocalStorage,
+  setDataToLocalStorage,
+  getFaviconUrl,
+} from "@/utils";
 import { Pencil, Trash2, Globe } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -33,14 +37,17 @@ export default function BookmarkIcon({
       return;
     }
 
-    // Otherwise use network URL
-    setIconSrc(
-      `https://scenic-start-node-ten.vercel.app/api/unauth/favorite-icon?domain=${hostname}`,
-    );
-  }, [hostname]);
+    // Otherwise use helper to get best source
+    setIconSrc(getFaviconUrl(bookmark.url || "", hostname));
+  }, [hostname, bookmark.url]);
 
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    if (!hostname || iconSrc.startsWith("data:")) return;
+    if (
+      !hostname ||
+      iconSrc.startsWith("data:") ||
+      iconSrc.startsWith("chrome-extension:")
+    )
+      return;
 
     // Convert to Base64 and cache if it's a fresh network load
     try {
@@ -97,14 +104,19 @@ export default function BookmarkIcon({
             alt={bookmark.title}
             className="w-8 h-8 rounded-md object-contain drop-shadow-md"
             loading="lazy"
-            crossOrigin="anonymous"
+            crossOrigin={
+              iconSrc.includes("google.com") ? undefined : "anonymous"
+            }
             onLoad={handleImageLoad}
-            onError={() => {
+            onError={(e) => {
               if (
                 iconSrc.includes("scenic-start") &&
                 !iconSrc.startsWith("data:")
               ) {
                 // Secondary fallback to Google if primary fails
+                // Remove crossOrigin for Google as it doesn't support CORS
+                const img = e.currentTarget;
+                img.removeAttribute("crossOrigin");
                 setIconSrc(
                   `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`,
                 );

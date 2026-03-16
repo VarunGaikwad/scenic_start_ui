@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   ChevronLeft,
   ChevronRight,
   X,
   Trash2,
+  Edit2,
   Bell,
   Gift,
   CheckCircle,
@@ -38,6 +40,8 @@ export default function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
   const [tasks, setTasks] = useState<CalendarTask[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskType, setNewTaskType] = useState<TaskType>("task");
+  const [newTaskTime, setNewTaskTime] = useState("");
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -96,13 +100,26 @@ export default function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
     const localDate = new Date(selectedDate.getTime() - offset * 60 * 1000);
     const dateStr = localDate.toISOString().split("T")[0];
 
-    await addTask({
-      title: newTaskTitle,
-      date: dateStr,
-      completed: false,
-      type: newTaskType,
-    });
+    if (editingTaskId) {
+      await updateTask(editingTaskId, {
+        title: newTaskTitle,
+        date: dateStr,
+        type: newTaskType,
+        time: newTaskTime || undefined,
+      });
+      setEditingTaskId(null);
+    } else {
+      await addTask({
+        title: newTaskTitle,
+        date: dateStr,
+        completed: false,
+        type: newTaskType,
+        time: newTaskTime || undefined,
+      });
+    }
+    
     setNewTaskTitle("");
+    setNewTaskTime("");
     loadTasks();
   };
 
@@ -123,13 +140,22 @@ export default function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
     return localDate.toISOString().split("T")[0];
   })();
 
-  const selectedTasks = tasks.filter((t) => t.date === selectedDateStr);
+  const selectedDateMMDD = selectedDateStr.substring(5);
+  const selectedTasks = tasks.filter((t) => 
+    t.date === selectedDateStr || (t.type === "birthday" && t.date.substring(5) === selectedDateMMDD)
+  );
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-200">
-      <div className="bg-black/80 backdrop-blur-md border border-white/10 rounded-3xl shadow-2xl w-full max-w-4xl h-150 flex overflow-hidden">
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-200 p-4"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-black/80 backdrop-blur-md border border-white/10 rounded-3xl shadow-2xl w-full max-w-4xl h-[600px] flex overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Left: Calendar Grid */}
         <div className="flex-1 p-8 border-r border-white/10 flex flex-col">
           <div className="flex items-center justify-between mb-8">
@@ -180,7 +206,11 @@ export default function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
                 return local.toISOString().split("T")[0];
               })();
 
-              const dayTasks = tasks.filter((t) => t.date === dateStr);
+              const dateMMDD = dateStr.substring(5);
+              const dayTasks = tasks.filter((t) => 
+                t.date === dateStr || (t.type === "birthday" && t.date.substring(5) === dateMMDD)
+              );
+              
               const isSelected =
                 selectedDate.getDate() === day &&
                 selectedDate.getMonth() === currentDate.getMonth();
@@ -224,8 +254,8 @@ export default function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
               })}
             </h3>
             <button
-              onClick={onClose}
-              className="p-2 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition"
+               onClick={onClose}
+               className="p-2 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition"
             >
               <X size={20} />
             </button>
@@ -233,14 +263,23 @@ export default function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
 
           {/* Add Task */}
           <div className="flex flex-col gap-3 mb-6">
-            <input
-              type="text"
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              placeholder="Add a new task..."
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
-              onKeyDown={(e) => e.key === "Enter" && handleAddTask()}
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                placeholder={editingTaskId ? "Edit task..." : "Add a new task..."}
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
+                onKeyDown={(e) => e.key === "Enter" && handleAddTask()}
+              />
+              <input
+                type="time"
+                value={newTaskTime}
+                onChange={(e) => setNewTaskTime(e.target.value)}
+                className="w-28 bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-white focus:outline-none focus:border-white/30 transition [&::-webkit-calendar-picker-indicator]:invert"
+                title="Task Time (Optional)"
+              />
+            </div>
             <div className="flex gap-2">
               {(["task", "birthday", "event"] as const).map((type) => (
                 <button
@@ -265,13 +304,27 @@ export default function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
                 </button>
               ))}
             </div>
-            <button
-              onClick={handleAddTask}
-              disabled={!newTaskTitle.trim()}
-              className="w-full py-3 bg-white text-black font-semibold rounded-xl hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              Add Task
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleAddTask}
+                disabled={!newTaskTitle.trim()}
+                className="flex-1 py-3 bg-white text-black font-semibold rounded-xl hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                {editingTaskId ? "Update" : "Add Task"}
+              </button>
+              {editingTaskId && (
+                <button
+                  onClick={() => {
+                    setEditingTaskId(null);
+                    setNewTaskTitle("");
+                    setNewTaskTime("");
+                  }}
+                  className="py-3 px-4 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Task List */}
@@ -312,22 +365,42 @@ export default function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
                       {task.type === "event" && (
                         <Bell size={8} className="text-blue-400" />
                       )}
-                      {task.type}
+                      {task.type} {task.time ? `• ${task.time}` : ""}
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => handleDeleteTask(task.id)}
-                    className="p-2 text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setNewTaskTitle(task.title);
+                        setNewTaskType(task.type);
+                        setNewTaskTime(task.time || "");
+                        setEditingTaskId(task.id);
+                      }}
+                      className="p-2 text-white/20 hover:text-blue-400 transition"
+                      title="Edit Task"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteTask(task.id);
+                      }}
+                      className="p-2 text-white/20 hover:text-red-400 transition"
+                      title="Delete Task"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))
             )}
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

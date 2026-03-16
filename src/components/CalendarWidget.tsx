@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Calendar, ChevronRight, Gift, Bell } from "lucide-react";
 import { getTasks } from "@/api";
 import type { CalendarTask } from "@/interface";
@@ -9,9 +9,9 @@ export default function CalendarWidget() {
   const [todayTasks, setTodayTasks] = useState<CalendarTask[]>([]);
   const [nextTask, setNextTask] = useState<CalendarTask | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [triggerFetch, setTriggerFetch] = useState(0);
 
   useEffect(() => {
-    // Update time every minute
     const timer = setInterval(() => setCurrentDate(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
@@ -19,18 +19,37 @@ export default function CalendarWidget() {
   useEffect(() => {
     const fetchTasks = async () => {
       const tasks = await getTasks();
-      const todayStr = new Date().toISOString().split("T")[0];
+      const localDate = new Date();
+      const offset = localDate.getTimezoneOffset();
+      const todayStr = new Date(localDate.getTime() - offset * 60 * 1000).toISOString().split("T")[0];
+      const todayMMDD = todayStr.substring(5);
 
-      const today = tasks.filter((t) => t.date === todayStr);
+      const today = tasks.filter((t) => 
+        t.date === todayStr || (t.type === "birthday" && t.date.substring(5) === todayMMDD)
+      );
       setTodayTasks(today);
 
       // Find next task (future)
-      const now = new Date();
       const upcoming = tasks
-        .filter((t) => new Date(t.date) >= now && t.date !== todayStr)
-        .sort(
-          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-        );
+        .map((t) => {
+          if (t.type === "birthday") {
+            const bdayMMDD = t.date.substring(5);
+            const thisYearBday = `${todayStr.substring(0, 4)}-${bdayMMDD}`;
+            if (thisYearBday > todayStr) {
+              return { ...t, date: thisYearBday };
+            } else {
+              const nextYear = parseInt(todayStr.substring(0, 4)) + 1;
+              return { ...t, date: `${nextYear}-${bdayMMDD}` };
+            }
+          }
+          return t;
+        })
+        .filter((t) => t.date > todayStr)
+        .sort((a, b) => {
+          const dateCmp = a.date.localeCompare(b.date);
+          if (dateCmp !== 0) return dateCmp;
+          return (a.time || "").localeCompare(b.time || "");
+        });
 
       setNextTask(upcoming[0] || null);
     };
@@ -39,21 +58,32 @@ export default function CalendarWidget() {
     // Poll for updates (reduced frequency to save resources)
     const interval = setInterval(fetchTasks, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [triggerFetch]);
 
   const birthday = todayTasks.find((t) => t.type === "birthday");
   const specialEvent = todayTasks.find((t) => t.type === "event");
 
-  // Trigger Notification on mount if there's a birthday or event
+  // Trigger Notification only once per unique task
+  const notifiedTasksRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
-    if (birthday || specialEvent) {
+    if (birthday && !notifiedTasksRef.current.has(birthday.id)) {
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification("Special Day!", {
-          body: birthday
-            ? `🎂 It's ${birthday.title} today!`
-            : `🔔 Event today: ${specialEvent?.title}`,
-          icon: "/icons/calendar.png", // Fallback icon
+          body: `🎂 It's ${birthday.title} today!${birthday.time ? ` at ${birthday.time}` : ""}`,
+          icon: "/icons/calendar.png",
         });
+        notifiedTasksRef.current.add(birthday.id);
+      }
+    }
+
+    if (specialEvent && !notifiedTasksRef.current.has(specialEvent.id)) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Special Day!", {
+          body: `🔔 Event today: ${specialEvent.title}${specialEvent.time ? ` at ${specialEvent.time}` : ""}`,
+          icon: "/icons/calendar.png",
+        });
+        notifiedTasksRef.current.add(specialEvent.id);
       }
     }
   }, [birthday, specialEvent]);
@@ -83,16 +113,26 @@ export default function CalendarWidget() {
         {birthday ? (
           <div className="mt-1 flex items-center gap-2 p-2 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-200">
             <Gift size={14} className="shrink-0 animate-pulse" />
-            <span className="text-xs font-medium truncate">
+            <span className="text-xs font-medium truncate flex-1">
               {birthday.title}
             </span>
+            {birthday.time && (
+              <span className="text-[10px] font-bold opacity-60">
+                {birthday.time}
+              </span>
+            )}
           </div>
         ) : specialEvent ? (
           <div className="mt-1 flex items-center gap-2 p-2 rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-200">
             <Bell size={14} className="shrink-0" />
-            <span className="text-xs font-medium truncate">
+            <span className="text-xs font-medium truncate flex-1">
               {specialEvent.title}
             </span>
+            {specialEvent.time && (
+              <span className="text-[10px] font-bold opacity-60">
+                {specialEvent.time}
+              </span>
+            )}
           </div>
         ) : nextTask ? (
           <div className="mt-1 flex flex-col gap-1">
@@ -107,6 +147,7 @@ export default function CalendarWidget() {
                 month: "short",
                 day: "numeric",
               })}
+              {nextTask.time && ` • ${nextTask.time}`}
             </span>
           </div>
         ) : (
@@ -123,7 +164,10 @@ export default function CalendarWidget() {
 
       <CalendarModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setTriggerFetch((prev) => prev + 1);
+        }}
       />
     </>
   );
