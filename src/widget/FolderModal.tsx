@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import Modal from "./Modal";
 import { postBookmarkFolder, postBookmarkWidget, postEmbedWidget } from "@/api";
 import type { BookmarkTreeType } from "@/interface";
+import PunchOutCard from "./PunchOutCard";
 
 const MAX_TITLE_LENGTH = 50;
 
@@ -86,7 +87,7 @@ export default function FolderModal({
       isOpen={isModalOpen}
       onClose={() => setIsModalOpen(false)}
       title="Create New Folder"
-      size="sm"
+      size={hasWidget && widgetType === "PUNCHOUT" ? "lg" : "sm"}
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Folder Name */}
@@ -151,10 +152,18 @@ export default function FolderModal({
                 className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-sm text-white border border-white/10 outline-none focus:border-blue-500/60"
               >
                 <option value="LRT">LRT Card</option>
+                <option value="PUNCHOUT">Punch Out Card</option>
                 <option value="EMBED">Embed Website</option>
               </select>
 
-              {/* Embed URL Input */}
+              {widgetType === "PUNCHOUT" && (
+                <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300 border border-white/5 rounded-xl overflow-hidden bg-zinc-900/50">
+                  <div className="scale-[0.8] origin-top -mb-20">
+                    <PunchOutCard />
+                  </div>
+                </div>
+              )}
+
               {widgetType === "EMBED" && (
                 <div className="mt-3">
                   <label

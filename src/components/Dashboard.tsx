@@ -5,6 +5,7 @@ import {
   EmbedWidget,
   BookmarkIcon,
   LRTSchedule,
+  PunchOutCard,
 } from "@/widget";
 import { Plus, FolderOpen } from "lucide-react";
 import { STORAGE_KEYS } from "@/constants";
@@ -235,6 +236,10 @@ export default function Dashboard() {
                         {widget.widgetType === "LRT" ? (
                           <div className="max-w-xl mx-auto w-full">
                             <LRTSchedule />
+                          </div>
+                        ) : widget.widgetType === "PUNCHOUT" ? (
+                          <div className="w-full">
+                            <PunchOutCard />
                           </div>
                         ) : widget.widgetType === "EMBED" ||
                           (widget.url &&

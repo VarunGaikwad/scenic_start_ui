@@ -38,6 +38,8 @@ export const STORAGE_KEYS = {
   LRT_SCHEDULE_CACHE: "scenic:v1:lrt:schedule_cache",
 
   LAST_AUTH_TIMESTAMP: "scenic:v1:last_auth_timestamp",
+
+  PUNCHOUT_DATA: "scenic:v1:punchout:data",
 };
 
 export const CACHE_DURATIONS = {
@@ -48,3 +50,24 @@ export const UI_CONSTANTS = {
   FLIP_DURATION_MS: 600,
   FLIP_HALFWAY_MS: 300,
 };
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+
+const ITEM_H = 40 as const;
+
+export { DAYS, MONTHS, ITEM_H };
