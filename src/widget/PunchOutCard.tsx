@@ -9,7 +9,6 @@ import { DAYS, MONTHS, STORAGE_KEYS } from "@/constants";
 import PunchOutModal from "./PunchOutModal";
 import { getDataFromLocalStorage } from "@/utils";
 
-const TARGET_OT_HOURS = 5;
 const STANDARD_DAILY_HOURS = 9;
 
 function parseTimeToMinutes(timeStr: string): number {
@@ -36,6 +35,10 @@ export default function PunchOutCard() {
   const [currentState, setCurrentState] = useState(0);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [lrtData, setLRTData] = useState<any>(null);
+  const [targetOT, setTargetOT] = useState(() => {
+    const stored = localStorage.getItem(STORAGE_KEYS.PUNCHOUT_TARGET);
+    return stored ? Number(stored) : 5;
+  });
 
   const punchOutData = getDataFromLocalStorage<
     Record<string, Record<string, { clockIn: string; clockOut: string }>>
@@ -78,7 +81,7 @@ export default function PunchOutCard() {
 
   const netOTMinutes = totalPositiveOTMinutes - totalNegativeOTMinutes;
   const totalNetOTHours = netOTMinutes / 60;
-  const remainingOTHours = Math.max(0, TARGET_OT_HOURS - totalNetOTHours);
+  const remainingOTHours = Math.max(0, targetOT - totalNetOTHours);
 
   // Suggested Clock Out Today
   let suggestedClockOut = "";
@@ -283,15 +286,32 @@ export default function PunchOutCard() {
                     Net Duration
                   </small>
                 </span>
-                <span className="text-zinc-500 text-sm mb-1 font-mono">
-                  Target: {TARGET_OT_HOURS}h
+                <span
+                  title="Click to change target"
+                  className="text-zinc-500 text-sm mb-1 font-mono cursor-pointer hover:text-blue-400 transition-colors flex items-center gap-1 group"
+                  onClick={() => {
+                    const next = prompt(
+                      "Enter monthly OT target (hours):",
+                      String(targetOT),
+                    );
+                    if (next !== null && !isNaN(Number(next)) && next !== "") {
+                      const val = Number(next);
+                      setTargetOT(val);
+                      localStorage.setItem(
+                        STORAGE_KEYS.PUNCHOUT_TARGET,
+                        String(val),
+                      );
+                    }
+                  }}
+                >
+                  Target: {targetOT}h
                 </span>
               </div>
               <div className="w-full h-1.5 bg-zinc-700 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-green-500 transition-all duration-500"
                   style={{
-                    width: `${Math.min(100, Math.max(0, (totalNetOTHours / TARGET_OT_HOURS) * 100))}%`,
+                    width: `${Math.min(100, Math.max(0, (totalNetOTHours / targetOT) * 100))}%`,
                   }}
                 />
               </div>

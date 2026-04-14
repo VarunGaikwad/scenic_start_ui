@@ -40,6 +40,7 @@ export const STORAGE_KEYS = {
   LAST_AUTH_TIMESTAMP: "scenic:v1:last_auth_timestamp",
 
   PUNCHOUT_DATA: "scenic:v1:punchout:data",
+  PUNCHOUT_TARGET: "scenic:v1:punchout:target",
 };
 
 export const CACHE_DURATIONS = {
