@@ -2,6 +2,20 @@ import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { MONTHS, STORAGE_KEYS } from "@/constants";
 import TimePicker from "./TimePicker";
+import { setDataToLocalStorage } from "@/utils";
+
+const getStoredData = (): Record<
+  string,
+  Record<string, { clockIn: string; clockOut: string }>
+> => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.PUNCHOUT_DATA);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    console.error("Failed to parse punchout data", e);
+    return {};
+  }
+};
 
 export default function PunchOutModal({
   year,
@@ -17,20 +31,12 @@ export default function PunchOutModal({
   const [clockIn, setClockIn] = useState("");
   const [clockOut, setClockOut] = useState("");
 
-  const getStoredData = (): Record<string, { clockIn: string; clockOut: string }> => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.PUNCHOUT_DATA);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      console.error("Failed to parse punchout data", e);
-      return {};
-    }
-  };
 
   useEffect(() => {
     const data = getStoredData();
-    const dateKey = `${year}-${month + 1}-${selectedDay}`;
-    const saved = data[dateKey];
+    const monthYearKey = `${MONTHS[month]} ${year}`;
+    const dayKey = `${selectedDay}`;
+    const saved = data[monthYearKey]?.[dayKey];
 
     if (saved) {
       setClockIn(saved.clockIn);
@@ -42,16 +48,20 @@ export default function PunchOutModal({
   }, [selectedDay, year, month]);
 
   const handleSave = () => {
-    if (!clockIn || !clockOut) return;
+    if (!clockIn) return;
 
     const data = getStoredData();
-    const dateKey = `${year}-${month + 1}-${selectedDay}`;
+    const monthYearKey = `${MONTHS[month]} ${year}`;
+    const dayKey = `${selectedDay}`;
 
-    localStorage.setItem(
+    const monthData = data[monthYearKey] || {};
+    monthData[dayKey] = { clockIn, clockOut };
+
+    setDataToLocalStorage(
       STORAGE_KEYS.PUNCHOUT_DATA,
       JSON.stringify({
         ...data,
-        [dateKey]: { clockIn, clockOut },
+        [monthYearKey]: monthData,
       }),
     );
     setSelectedDay(null);
@@ -97,7 +107,7 @@ export default function PunchOutModal({
         <div className="flex justify-end">
           <button
             onClick={handleSave}
-            disabled={!clockIn || !clockOut}
+            disabled={!clockIn}
             className="bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-1.5 rounded-lg transition-colors cursor-pointer"
           >
             Save
